@@ -5,11 +5,7 @@ require("@openzeppelin/hardhat-upgrades");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   networks: {
-    hardhat: {
-      accounts: {
-        mnemonic: "text oblige island web bus tennis educate choice sketch board journey fluid"
-      }
-    },
+    hardhat: {},
     localhost: {
       url: "http://127.0.0.1:8545/",
     },

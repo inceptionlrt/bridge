@@ -3,7 +3,6 @@ const { expect } = require("chai");
 const web3x = require("web3");
 const { encodeTransactionReceipt, encodeProof, randBigInt } = require("./helpers/bridge_utils");
 const { signMessageUsingPrivateKey } = require("./helpers/evm_utils");
-const config = require("../hardhat.config");
 const { parseEther } = require("ethers");
 
 // Constants
