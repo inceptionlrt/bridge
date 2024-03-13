@@ -6,10 +6,9 @@ require("@openzeppelin/hardhat-upgrades");
 module.exports = {
   networks: {
     hardhat: {
-      // forking: {
-      //   url: `${process.env.RPC_URL_ETHEREUM}`,
-      //   blockNumber: 18923449,
-      // },
+      accounts: {
+        mnemonic: "text oblige island web bus tennis educate choice sketch board journey fluid"
+      }
     },
     localhost: {
       url: "http://127.0.0.1:8545/",

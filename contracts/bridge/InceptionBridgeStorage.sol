@@ -79,7 +79,7 @@ abstract contract InceptionBridgeStorage is
                 amount >
             longCaps[fromToken]
         ) {
-            revert ShortCapExceeded(
+            revert LongCapExceeded(
                 longCaps[fromToken],
                 longCapsDeposit[fromToken][getCurrentStamp(longCapDuration)] +
                     amount
@@ -108,7 +108,7 @@ abstract contract InceptionBridgeStorage is
             longCapsWithdraw[token][getCurrentStamp(longCapDuration)] + amount >
             longCaps[token]
         ) {
-            revert ShortCapExceeded(
+            revert LongCapExceeded(
                 longCaps[token],
                 longCapsWithdraw[token][getCurrentStamp(longCapDuration)] +
                     amount

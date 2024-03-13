@@ -21,8 +21,8 @@ contract XERC20 is Initializable, IERC20Metadata {
     }
 
     // --- ERC20 Data ---
-    string public constant name = "XERC20";
-    string public constant symbol = "TKN";
+    string private _name;
+    string private _symbol;
     string public constant version = "1";
     uint8 public constant decimals = 18;
     uint256 public totalSupply;
@@ -30,8 +30,18 @@ contract XERC20 is Initializable, IERC20Metadata {
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
 
-    function initialize() external initializer {
+    function initialize(string memory name_, string memory symbol_) external initializer {
         wards[msg.sender] = 1;
+        _name = name_;
+        _symbol = symbol_;
+    }
+
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
     }
 
     // --- XERC20 ---
