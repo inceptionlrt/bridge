@@ -122,7 +122,6 @@ describe("InceptionBridge", function () {
         // Process proofs
         const fromToken = arg.fromToken();
         const toToken = arg.toToken();
-        const fromBridge = arg.fromBridge();
         const toBridge = arg.toBridge();
         const sender = arg.sender();
         const recipient = arg.recipient();
