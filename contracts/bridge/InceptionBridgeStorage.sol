@@ -240,8 +240,8 @@ abstract contract InceptionBridgeStorage is
             )
         );
 
-        if (_destinationTokens[direction] != address(0)) {
-            revert DestinationAlreadyExists();
+        if (_destinationTokens[direction] == address(0)) {
+            revert DestinationNotExist();
         }
         delete _destinationTokens[direction];
 
