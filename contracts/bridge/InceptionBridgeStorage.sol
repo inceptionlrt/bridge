@@ -174,12 +174,13 @@ abstract contract InceptionBridgeStorage is
         if (bridge == address(0x0)) {
             revert NullAddress();
         }
-        if (_bridgeAddressByChainId[destinationChain] != address(0x00)) {
-            revert BridgeAlreadyAdded();
-        }
         if (destinationChain == 0) {
             revert InvalidChain();
         }
+        if (_bridgeAddressByChainId[destinationChain] != address(0x00)) {
+            revert BridgeAlreadyAdded();
+        }
+
         _bridgeAddressByChainId[destinationChain] = bridge;
 
         emit BridgeAdded(bridge, destinationChain);
@@ -188,9 +189,6 @@ abstract contract InceptionBridgeStorage is
     function _removeBridge(uint256 destinationChain) internal {
         if (_bridgeAddressByChainId[destinationChain] == address(0x00)) {
             revert BridgeNotExist();
-        }
-        if (destinationChain == 0) {
-            revert InvalidChain();
         }
         address bridge = _bridgeAddressByChainId[destinationChain];
         delete _bridgeAddressByChainId[destinationChain];
