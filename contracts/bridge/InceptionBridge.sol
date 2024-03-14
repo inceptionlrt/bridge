@@ -222,14 +222,6 @@ contract InceptionBridge is
         _setOperator(operatorAddress);
     }
 
-    function setMetadata(
-        address tokenAddress,
-        bytes32 tokenName,
-        bytes32 tokenSymbol
-    ) external onlyOwner {
-        _setMetadata(tokenAddress, tokenName, tokenSymbol);
-    }
-
     function setShortCap(
         address tokenAddress,
         uint256 amount

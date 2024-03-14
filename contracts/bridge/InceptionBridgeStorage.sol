@@ -125,15 +125,6 @@ abstract contract InceptionBridgeStorage is
         _operatorAddress = operatorAddress;
     }
 
-    function _setMetadata(
-        address token,
-        bytes32 tokenName,
-        bytes32 tokenSymbol
-    ) internal {
-        IERC20MetadataChangeable(token).changeName(tokenName);
-        IERC20MetadataChangeable(token).changeSymbol(tokenSymbol);
-    }
-
     /*//////////////////////////
     ////// SET functions //////
     ////////////////////////*/
@@ -238,8 +229,8 @@ abstract contract InceptionBridgeStorage is
             )
         );
 
-        if (_destinationTokens[direction] == address(0)) {
-            revert DestinationNotExist();
+        if (_destinationTokens[direction] != toToken) {
+            revert UnknownDestination();
         }
         delete _destinationTokens[direction];
 
