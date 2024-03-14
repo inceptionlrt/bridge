@@ -6,6 +6,7 @@ interface IInceptionBridgeErrors {
     error ShortCapExceeded(uint256 limit, uint256 current);
     /// @dev
     error LongCapExceeded(uint256 limit, uint256 current);
+
     /// @dev
     error BridgeAlreadyAdded();
     error BridgeNotExist();
@@ -42,6 +43,8 @@ interface IInceptionBridgeErrors {
     error UnknownDestinationChain();
 
     error DestinationAlreadyExists();
+
+    error DestinationNotExist();
 
     error BurnFailed();
 
