@@ -760,14 +760,14 @@ describe("InceptionBridge", function () {
         await bridge3.addDestination(await token3.getAddress(), ANOTHER_CHAIN, await token1.getAddress())
 
         await expect(bridge3.removeDestination(await token2.getAddress(), ANOTHER_CHAIN, await token1.getAddress()))
-          .to.revertedWithCustomError(bridge3, "DestinationNotExist");
+          .to.revertedWithCustomError(bridge3, "UnknownDestination");
 
         await expect(bridge3.removeDestination(await token3.getAddress(), CHAIN_ID, await token1.getAddress()))
           .to.revertedWithCustomError(bridge3, "UnknownDestinationChain");
 
         await bridge3.removeDestination(await token3.getAddress(), ANOTHER_CHAIN, await token1.getAddress());
         await expect(bridge3.removeDestination(await token3.getAddress(), ANOTHER_CHAIN, await token1.getAddress()))
-          .to.revertedWithCustomError(bridge3, "DestinationNotExist");
+          .to.revertedWithCustomError(bridge3, "UnknownDestination");
       })
 
       it("removeDestination: reverts when called by not an owner", async function () {
