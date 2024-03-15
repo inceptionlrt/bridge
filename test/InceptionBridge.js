@@ -2,7 +2,12 @@ const { ethers, upgrades, network } = require("hardhat");
 const { time, takeSnapshot } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
 const web3x = require("web3");
-const { encodeTransactionReceipt, encodeProof, randBigInt } = require("./helpers/bridge_utils");
+const {
+  encodeTransactionReceipt,
+  encodeTransactionReceiptInvalidContractAddress,
+  encodeTransactionReceiptInvalidFromTokenAddress,
+  encodeProof,
+  randBigInt } = require("./helpers/bridge_utils");
 const { signMessageUsingPrivateKey } = require("./helpers/evm_utils");
 const { parseEther } = require("ethers");
 
@@ -63,6 +68,13 @@ async function initIBridge() {
   await token1.connect(deployer).mint(signer1.address, ethers.parseEther("100"));
   await token1.connect(signer1).approve(await bridge1.getAddress(), ethers.parseEther("1000"));
   await token1.connect(signer2).approve(await bridge1.getAddress(), ethers.parseEther("1000"));
+
+  console.log(`Bridge1: ${await bridge1.getAddress()}`);
+  console.log(`Bridge2: ${await bridge2.getAddress()}`);
+  console.log(`Bridge3: ${await bridge3.getAddress()}`);
+  console.log(`Token1: ${await token1.getAddress()}`);
+  console.log(`Token2: ${await token2.getAddress()}`);
+  console.log(`Token3: ${await token3.getAddress()}`);
 }
 
 describe("InceptionBridge", function () {
@@ -216,6 +228,45 @@ describe("InceptionBridge", function () {
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature))
           .to.be.revertedWithCustomError(bridge2, "ReceiptWrongChain")
           .withArgs(CHAIN_ID, 666);
+      });
+
+      it("withdraw: InvalidContractAddress", async function() {
+        const amount = parseEther("1");
+        await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
+
+        let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
+        receipt = await tx1.wait();
+
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalDataInvalidContractAddress(operator, receipt);
+        await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature))
+          .to.be.revertedWithCustomError(bridge2, "InvalidContractAddress")
+      });
+
+      it("withdraw: InvalidFromTokenAddress", async function() {
+        const amount = parseEther("1");
+        await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
+
+        let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
+        receipt = await tx1.wait();
+        const invalidData = bridgeFactory.interface.encodeEventLog("Deposited", [
+          CHAIN_ID,
+          signer1.address,
+          signer2.address,
+          ethers.ZeroAddress, //toToken replaced with zero address
+          await token2.getAddress(),
+          amount,
+          1,
+          [
+            ethers.encodeBytes32String(await token1.symbol()),
+            ethers.encodeBytes32String(await token1.name()),
+            0,
+            ethers.ZeroAddress
+          ]
+        ]).data;
+
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateInvalidWithdrawalData(operator, receipt, invalidData);
+        await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature))
+          .to.be.revertedWithCustomError(bridge2, "InvalidFromTokenAddress")
       });
 
       it("withdraw: reverts when source bridge is unknown", async function() {
@@ -928,6 +979,63 @@ function generateWithdrawalData(consensus, receipt) {
   return [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash];
 }
 
+function generateWithdrawalDataInvalidContractAddress(consensus, receipt) {
+  const event = receipt.logs.find((e) => e.eventName === "Deposited");
+  const [rawReceipt, receiptHash] = encodeTransactionReceiptInvalidContractAddress(receipt);
+  const [encodedProof, proofHash] = encodeProof(
+    CHAIN_ID,
+    1,
+    receipt.hash,
+    receipt.blockNumber,
+    receipt.blockHash,
+    receipt.index,
+    receiptHash,
+    web3x.utils.padLeft(web3x.utils.toHex(event.args["amount"].toString()), 64)
+  );
+
+  const accounts = config.networks.hardhat.accounts;
+  const mnemonic = ethers.Mnemonic.fromPhrase(accounts.mnemonic);
+  let proofSignature;
+  for (let i = 0; ; i++) {
+    const wallet1 = ethers.HDNodeWallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${i}`);
+    if (wallet1.address === consensus.address) {
+      const privateKey = wallet1.privateKey.substring(2);
+      proofSignature = signMessageUsingPrivateKey(privateKey, proofHash);
+      break;
+    }
+  }
+
+  return [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash];
+}
+
+function generateInvalidWithdrawalData(consensus, receipt, invalidData) {
+  const event = receipt.logs.find((e) => e.eventName === "Deposited");
+  const [rawReceipt, receiptHash] = encodeTransactionReceiptInvalidFromTokenAddress(receipt, invalidData);
+  const [encodedProof, proofHash] = encodeProof(
+    CHAIN_ID,
+    1,
+    receipt.hash,
+    receipt.blockNumber,
+    receipt.blockHash,
+    receipt.index,
+    receiptHash,
+    web3x.utils.padLeft(web3x.utils.toHex(event.args["amount"].toString()), 64)
+  );
+
+  const accounts = config.networks.hardhat.accounts;
+  const mnemonic = ethers.Mnemonic.fromPhrase(accounts.mnemonic);
+  let proofSignature;
+  for (let i = 0; ; i++) {
+    const wallet1 = ethers.HDNodeWallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${i}`);
+    if (wallet1.address === consensus.address) {
+      const privateKey = wallet1.privateKey.substring(2);
+      proofSignature = signMessageUsingPrivateKey(privateKey, proofHash);
+      break;
+    }
+  }
+
+  return [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash];
+}
 async function toNextDay() {
   const block = await ethers.provider.getBlock("latest");
   const nextDayTs = Math.floor(block.timestamp / 86400 + 1) * 86400;

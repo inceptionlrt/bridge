@@ -2,6 +2,7 @@ const eth = require("ethereumjs-util");
 const rlp = require("rlp");
 const Web3 = require("web3");
 const abiCoder = require("web3-eth-abi");
+const { ethers } = require("hardhat");
 
 /** @var web3 {Web3} */
 
@@ -122,7 +123,6 @@ function encodeTransactionReceipt(txReceipt) {
       Buffer.from(log.data.substr(2), "hex"),
     ];
   });
-
   const rlpReceipt = [
     // postStateOrStatus
     Web3.utils.numberToHex(Number(txReceipt.status)),
@@ -133,9 +133,62 @@ function encodeTransactionReceipt(txReceipt) {
     // logs
     rlpLogs,
   ];
+  const encodedReceipt = rlp.encode(rlpReceipt);
+  const receiptHash = eth.keccak256(encodedReceipt);
+  return [`0x${encodedReceipt.toString("hex")}`, `0x${receiptHash.toString("hex")}`];
+}
 
-  const encodedReceipt = rlp.encode(rlpReceipt),
-    receiptHash = eth.keccak256(encodedReceipt);
+function encodeTransactionReceiptInvalidContractAddress(txReceipt) {
+  const rlpLogs = txReceipt.logs.map((log) => {
+    return [
+      // address
+      log.address,
+      // topics
+      log.topics,
+      // data
+      Buffer.from(log.data.substr(2), "hex"),
+    ];
+  });
+  rlpLogs[1][0] = ethers.ZeroAddress;
+  const rlpReceipt = [
+    // postStateOrStatus
+    Web3.utils.numberToHex(Number(txReceipt.status)),
+    // cumulativeGasUsed
+    Web3.utils.numberToHex(txReceipt.cumulativeGasUsed.toString()),
+    // bloom
+    //txReceipt.logsBloom,
+    // logs
+    rlpLogs,
+  ];
+  const encodedReceipt = rlp.encode(rlpReceipt);
+  const receiptHash = eth.keccak256(encodedReceipt);
+  return [`0x${encodedReceipt.toString("hex")}`, `0x${receiptHash.toString("hex")}`];
+}
+
+function encodeTransactionReceiptInvalidFromTokenAddress(txReceipt, data) {
+  const rlpLogs = txReceipt.logs.map((log) => {
+    return [
+      // address
+      log.address,
+      // topics
+      log.topics,
+      // data
+      Buffer.from(log.data.substr(2), "hex"),
+    ];
+  });
+  rlpLogs[1][2] = Buffer.from(data.substr(2), "hex");
+  const rlpReceipt = [
+    // postStateOrStatus
+    Web3.utils.numberToHex(Number(txReceipt.status)),
+    // cumulativeGasUsed
+    Web3.utils.numberToHex(txReceipt.cumulativeGasUsed.toString()),
+    // bloom
+    //txReceipt.logsBloom,
+    // logs
+    rlpLogs,
+  ];
+  const encodedReceipt = rlp.encode(rlpReceipt);
+  const receiptHash = eth.keccak256(encodedReceipt);
   return [`0x${encodedReceipt.toString("hex")}`, `0x${receiptHash.toString("hex")}`];
 }
 
@@ -173,6 +226,8 @@ module.exports = {
   nativeAddressByNetwork,
   simpleTokenProxyAddress,
   internetBondProxyAddress,
+  encodeTransactionReceiptInvalidContractAddress,
+  encodeTransactionReceiptInvalidFromTokenAddress,
   encodeTransactionReceipt,
   encodeProof,
   randBigInt,
