@@ -84,8 +84,8 @@ contract InceptionBridge is
         _safeBurn(fromToken, sender, amount);
 
         Metadata memory metaData = Metadata(
-            Utils.stringToBytes32(IERC20Extra(fromToken).symbol()),
             Utils.stringToBytes32(IERC20Extra(fromToken).name()),
+            Utils.stringToBytes32(IERC20Extra(fromToken).symbol()),
             0,
             address(0)
         );
