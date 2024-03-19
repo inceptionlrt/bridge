@@ -63,6 +63,7 @@ contract InceptionBridge is
         address receiver,
         uint256 amount
     ) external override nonReentrant whenNotPaused {
+        _beforeDeposit();
         _updateDepositCaps(fromToken, amount);
 
         if (getDestination(fromToken, destinationChain) != address(0)) {

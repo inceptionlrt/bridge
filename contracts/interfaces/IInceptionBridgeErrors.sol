@@ -13,6 +13,8 @@ interface IInceptionBridgeErrors {
 
     error InvalidChain();
 
+    error MultipleDeposits();
+
     /// @dev
     error ReceiptWrongChain(uint256 required, uint256 provided);
 

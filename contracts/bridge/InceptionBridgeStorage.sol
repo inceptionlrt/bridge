@@ -2,27 +2,13 @@
 pragma solidity ^0.8.20;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
 import "../interfaces/IInceptionBridge.sol";
 import "../interfaces/IInceptionBridgeErrors.sol";
-
-import "../lib/EthereumVerifier.sol";
-import "../lib/ProofParser.sol";
-import "../lib/Utils.sol";
 
 /// @author The InceptionLRT team
 /// @title The InceptionBridgeStorage contract
 /// @notice Stores variables for the InceptionBridge contract and facilitates their updates.
 abstract contract InceptionBridgeStorage is
-    OwnableUpgradeable,
-    PausableUpgradeable,
     IInceptionBridgeStorage,
     IInceptionBridgeErrors
 {
@@ -52,9 +38,28 @@ abstract contract InceptionBridgeStorage is
     /// @dev token => (epochTime/longCapDuration) => Current Withdraws
     mapping(address => mapping(uint256 => uint256)) public longCapsWithdraw;
 
+    address internal _previousSender;
+    uint256 internal _previousDepositBlockNum;
+
+    /// TODO
+    uint256[50 - 15] private __gap;
+
     function __initInceptionBridgeStorage(address operatorAddress) internal {
         _operatorAddress = operatorAddress;
         _setDefaultCrosschainThreshold();
+    }
+
+    function _beforeDeposit() internal {
+        if (_previousSender != address(0) && _previousDepositBlockNum != 0) {
+            if (
+                _previousSender == tx.origin &&
+                _previousDepositBlockNum == block.number
+            ) {
+                revert MultipleDeposits();
+            }
+        }
+        _previousSender = tx.origin;
+        _previousDepositBlockNum = block.number;
     }
 
     function _updateDepositCaps(address fromToken, uint256 amount) internal {
