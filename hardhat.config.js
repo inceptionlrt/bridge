@@ -5,12 +5,7 @@ require("@openzeppelin/hardhat-upgrades");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   networks: {
-    hardhat: {
-      // forking: {
-      //   url: `${process.env.RPC_URL_ETHEREUM}`,
-      //   blockNumber: 18923449,
-      // },
-    },
+    hardhat: {},
     localhost: {
       url: "http://127.0.0.1:8545/",
     },
