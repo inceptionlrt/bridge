@@ -183,6 +183,20 @@ describe("InceptionBridge", function () {
         await snapshot.restore();
       });
 
+      it("deposit: when called multiple times in one transaction", async function() {
+        const MultipleDepositor = await ethers.getContractFactory("MultipleDepositor");
+        const multipleDepositor = await MultipleDepositor.connect(deployer).deploy(await bridge1.getAddress());
+        await multipleDepositor.waitForDeployment();
+
+        await token1.connect(signer1).approve(await multipleDepositor.getAddress(), ethers.parseEther("100"));
+
+        expect((await token1.balanceOf(await signer1.getAddress())).toString()).to.be.equal(ethers.parseEther("100").toString());
+        expect((await token1.totalSupply()).toString()).to.be.equal(ethers.parseEther("100").toString());
+
+        await expect(multipleDepositor.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, await signer2.getAddress(), ethers.parseEther("1").toString(), "10"))
+          .to.be.revertedWithCustomError(bridge1, "MultipleDeposits");
+      })
+
       it("deposit: reverts when fromToken not supported", async function() {
         await bridge1.setShortCap(await token3.getAddress(), ethers.parseEther("1000"));
         await bridge1.setLongCap(await token3.getAddress(), ethers.parseEther("1000"));
@@ -336,10 +350,6 @@ describe("InceptionBridge", function () {
           .to.be.revertedWithCustomError(bridge1, "EnforcedPause");
       });
     })
-
-
-
-
   });
 
   describe("Capacity limits", function () {
