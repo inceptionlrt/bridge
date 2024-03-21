@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
@@ -30,7 +30,10 @@ contract XERC20 is Initializable, IERC20Metadata {
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
 
-    function initialize(string memory name_, string memory symbol_) external initializer {
+    function initialize(
+        string memory name_,
+        string memory symbol_
+    ) external initializer {
         wards[msg.sender] = 1;
         _name = name_;
         _symbol = symbol_;

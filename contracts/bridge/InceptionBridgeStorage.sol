@@ -41,11 +41,10 @@ abstract contract InceptionBridgeStorage is
     address internal _previousSender;
     uint256 internal _previousDepositBlockNum;
 
-    /// TODO
     uint256[50 - 15] private __gap;
 
     function __initInceptionBridgeStorage(address operatorAddress) internal {
-        _operatorAddress = operatorAddress;
+        _setOperator(operatorAddress);
         _setDefaultCrosschainThreshold();
     }
 

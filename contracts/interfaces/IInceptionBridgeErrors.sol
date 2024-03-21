@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 interface IInceptionBridgeErrors {
     /// @dev
@@ -24,29 +24,23 @@ interface IInceptionBridgeErrors {
     error NullAddress();
 
     /// @dev
-    /// vent-from-unknown-bridge
     error UnknownBridge();
 
     /// @dev
-    /// vent-from-unknown-bridge
     error WrongSignature();
 
     error WithdrawalProofUsed();
 
     error InvalidAssetType();
 
-    /// invalid-fromToken
     error InvalidFromTokenAddress();
 
-    /// bridge-from-unknown-destination
     error UnknownDestination();
 
     /// non-existing-bridge
     error UnknownDestinationChain();
 
     error DestinationAlreadyExists();
-
-    error DestinationNotExist();
 
     error BurnFailed();
 

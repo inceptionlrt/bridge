@@ -219,7 +219,7 @@ contract InceptionBridge is
     ////// SET functions //////
     ////////////////////////*/
 
-    function setOperator(address operatorAddress) public onlyOwner {
+    function setOperator(address operatorAddress) external onlyOwner {
         _setOperator(operatorAddress);
     }
 
@@ -242,16 +242,14 @@ contract InceptionBridge is
         _setLongCap(token, amount);
     }
 
-    /// TODO setNewCapacities
-
     function addBridge(
         address bridge,
         uint256 destinationChain
-    ) public onlyOwner {
+    ) external onlyOwner {
         _addBridge(bridge, destinationChain);
     }
 
-    function removeBridge(uint256 destinationChain) public onlyOwner {
+    function removeBridge(uint256 destinationChain) external onlyOwner {
         _removeBridge(destinationChain);
     }
 
