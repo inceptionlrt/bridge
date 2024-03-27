@@ -1,0 +1,28 @@
+{
+  "bridgesToAdd": [
+    {
+      "deschainID": "bridge_chain_id",
+      "address": "bridge_address"
+    },
+    {
+      "deschainID": "bridge_2_chain_id",
+      "address": "bridge_2_address"
+    }
+  ],
+  "tokens": [
+    {
+      "address": "",
+      "destinationChainID": "",
+      "destinationAddress": "",
+      "shortCap": "",
+      "longCap": ""
+    },
+    {
+      "address": "",
+      "destinationChainID": "",
+      "destinationAddress": "",
+      "shortCap": "",
+      "longCap": ""
+    }
+  ]
+}

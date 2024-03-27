@@ -2,6 +2,13 @@ require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@openzeppelin/hardhat-upgrades");
 
+/**
+ * Hardhat tasks
+ * For more details, kindly proceed to README.md
+ */
+
+require("./tasks/deploy-bridge");
+
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   networks: {
