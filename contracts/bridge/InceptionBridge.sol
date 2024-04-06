@@ -140,7 +140,7 @@ contract InceptionBridge is
         if (state.contractAddress == address(0)) {
             revert InvalidContractAddress();
         }
-        if (state.destinationContract == address(this))
+        if (state.destinationContract != address(this))
             revert WrongDestinationBridge();
 
         if (_bridgeAddressByChainId[proof.chainId] != state.contractAddress) {
