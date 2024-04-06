@@ -45,6 +45,7 @@ interface IInceptionBridgeStorage {
 interface IInceptionBridge {
     event Deposited(
         uint256 destinationChain,
+        address indexed destinationBridge,
         address indexed sender,
         address indexed receiver,
         address fromToken,

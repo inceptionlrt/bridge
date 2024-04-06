@@ -8,7 +8,7 @@ import "../interfaces/IInceptionBridge.sol";
 library EthereumVerifier {
     bytes32 constant TOPIC_DEPOSITED =
         keccak256(
-            "Deposited(uint256,address,address,address,address,uint256,uint256,(bytes32,bytes32,uint256,address))"
+            "Deposited(uint256,address,address,address,address,address,uint256,uint256,(bytes32,bytes32,uint256,address))"
         );
 
     enum DepositType {
@@ -19,6 +19,7 @@ library EthereumVerifier {
     struct State {
         bytes32 receiptHash;
         address contractAddress;
+        address destinationContract;
         uint256 chainId;
         address sender;
         address receiver;
@@ -100,6 +101,7 @@ library EthereumVerifier {
         }
         /* topics */
         bytes32 mainTopic;
+        address destinationContract;
         address sender;
         address receiver;
         {
@@ -114,6 +116,10 @@ library EthereumVerifier {
             }
             topicsIter = CallDataRLPReader.beginIteration(topicsIter);
             mainTopic = bytes32(CallDataRLPReader.toUintStrict(topicsIter));
+            topicsIter = CallDataRLPReader.next(topicsIter);
+            destinationContract = address(
+                bytes20(uint160(CallDataRLPReader.toUintStrict(topicsIter)))
+            );
             topicsIter = CallDataRLPReader.next(topicsIter);
             sender = address(
                 bytes20(uint160(CallDataRLPReader.toUintStrict(topicsIter)))
@@ -163,6 +169,7 @@ library EthereumVerifier {
                 calldatacopy(structOffset, ptr, len)
             }
         }
+        state.destinationContract = destinationContract;
         state.contractAddress = contractAddress;
         state.sender = sender;
         state.receiver = receiver;

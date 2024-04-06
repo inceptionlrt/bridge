@@ -95,6 +95,7 @@ contract InceptionBridge is
 
         emit Deposited(
             destinationChain,
+            _bridgeAddressByChainId[destinationChain],
             sender,
             receiver,
             fromToken,
@@ -139,6 +140,9 @@ contract InceptionBridge is
         if (state.contractAddress == address(0)) {
             revert InvalidContractAddress();
         }
+        if (state.destinationContract == address(this))
+            revert WrongDestinationBridge();
+
         if (_bridgeAddressByChainId[proof.chainId] != state.contractAddress) {
             revert UnknownBridge();
         }
@@ -148,7 +152,7 @@ contract InceptionBridge is
         proof.receiptHash = state.receiptHash;
         bytes32 proofHash;
         assembly {
-            proofHash := keccak256(proof, 0x100)
+            proofHash := keccak256(proof, _PROOF_LENGTH)
         }
 
         if (ECDSA.recover(proofHash, proofSignature) != _operatorAddress) {
