@@ -37,7 +37,7 @@ interface IInceptionBridgeErrors {
 
     error UnknownDestination();
 
-    /// non-existing-bridge
+    /// @notice non-existing-bridge
     error UnknownDestinationChain();
 
     error DestinationAlreadyExists();
