@@ -1,7 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface IXERC20 {
+interface IERC20Errors {
+    /**
+     * @notice Reverts when a user with too low of a limit tries to call mint/burn
+     */
+    error IXERC20_NotHighEnoughLimits();
+
+    /**
+     * @notice Reverts when caller is not the factory
+     */
+    error IXERC20_NotFactory();
+}
+
+interface IXERC20 is IERC20Errors {
+    /**
+     * @notice Contains the full minting and burning data for a particular bridge
+     *
+     * @param minterParams The minting parameters for the bridge
+     * @param burnerParams The burning parameters for the bridge
+     */
+    struct Bridge {
+        BridgeParameters minterParams;
+        BridgeParameters burnerParams;
+    }
+
     /**
      * @notice Emits when a lockbox is set
      *
@@ -21,27 +44,6 @@ interface IXERC20 {
         uint256 _burningLimit,
         address indexed _bridge
     );
-
-    /**
-     * @notice Reverts when a user with too low of a limit tries to call mint/burn
-     */
-    error IXERC20_NotHighEnoughLimits();
-
-    /**
-     * @notice Reverts when caller is not the factory
-     */
-    error IXERC20_NotFactory();
-
-    /**
-     * @notice Contains the full minting and burning data for a particular bridge
-     *
-     * @param minterParams The minting parameters for the bridge
-     * @param burnerParams The burning parameters for the bridge
-     */
-    struct Bridge {
-        BridgeParameters minterParams;
-        BridgeParameters burnerParams;
-    }
 
     /**
      * @notice Contains the mint or burn parameters for a bridge

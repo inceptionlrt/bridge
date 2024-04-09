@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IXERC20} from "../interfaces/IXERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {IXERC20Lockbox} from "../interfaces/IXERC20Lockbox.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
+import "../interfaces/IXERC20Lockbox.sol";
+import "../interfaces/IXERC20.sol";
 
 contract XERC20Lockbox is IXERC20Lockbox {
     using SafeERC20 for IERC20;

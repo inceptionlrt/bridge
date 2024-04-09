@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.4 <0.9.0;
+pragma solidity ^0.8.20;
 
-import {IXERC20} from "../interfaces/IXERC20.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import "../interfaces/IXERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
     /**
@@ -81,7 +81,7 @@ contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
      * @param _burningLimit The updated burning limit we are setting to the bridge
      * @param _bridge The address of the bridge we are setting the limits too
      */
-    function setLimits(
+    function setBridgeLimits(
         address _bridge,
         uint256 _mintingLimit,
         uint256 _burningLimit

@@ -1,7 +1,18 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface IXERC20Lockbox {
+interface IXERC20LockboxErrors {
+    /// @notice Reverts when a user tries to deposit native tokens on a non-native lockbox
+    error IXERC20Lockbox_NotNative();
+
+    /// @notice Reverts when a user tries to deposit non-native tokens on a native lockbox
+    error IXERC20Lockbox_Native();
+
+    /// @notice Reverts when a user tries to withdraw and the call fails
+    error IXERC20Lockbox_WithdrawFailed();
+}
+
+interface IXERC20Lockbox is IXERC20LockboxErrors {
     /**
      * @notice Emitted when tokens are deposited into the lockbox
      *
@@ -17,21 +28,6 @@ interface IXERC20Lockbox {
      * @param _amount The amount of tokens withdrawn
      */
     event Withdraw(address _sender, uint256 _amount);
-
-    /**
-     * @notice Reverts when a user tries to deposit native tokens on a non-native lockbox
-     */
-    error IXERC20Lockbox_NotNative();
-
-    /**
-     * @notice Reverts when a user tries to deposit non-native tokens on a native lockbox
-     */
-    error IXERC20Lockbox_Native();
-
-    /**
-     * @notice Reverts when a user tries to withdraw and the call fails
-     */
-    error IXERC20Lockbox_WithdrawFailed();
 
     /**
      * @notice Deposit ERC20 tokens into the lockbox
