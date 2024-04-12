@@ -134,9 +134,6 @@ function randBigInt(length) {
 
 module.exports = {
   createSimpleTokenMetaData,
-  createInternetBondMetaData,
-  nameAndSymbolByNetwork,
-  nativeAddressByNetwork,
   encodeTransactionReceiptInvalidContractAddress,
   encodeTransactionReceiptInvalidFromTokenAddress,
   encodeTransactionReceipt,

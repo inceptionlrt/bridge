@@ -1,13 +1,14 @@
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@openzeppelin/hardhat-upgrades");
+//require("@nomicfoundation/hardhat-verify");
 
 /**
  * Hardhat tasks
  * For more details, kindly proceed to README.md
  */
 
-require("./tasks/deploy-bridge");
+require("./tasks/setup-bridge");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -15,6 +16,18 @@ module.exports = {
     hardhat: {},
     localhost: {
       url: "http://127.0.0.1:8545/",
+    },
+    holesky: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
+      url: `${process.env.RPC_URL_HOLESKY}`,
+      chainId: 17000,
+      gas: 8000000,
+    },
+    arbitrum_testnet: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
+      url: `${process.env.RPC_URL_ARBITRUM_TESTNET}`,
+      chainId: 421614,
+      gas: 8000000,
     },
     // mainnet: {
     //   accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],

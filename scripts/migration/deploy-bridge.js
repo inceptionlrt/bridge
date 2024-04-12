@@ -10,9 +10,6 @@ const abiCoder = require("web3-eth-abi");
 
 let tx;
 
-// const INCEPTION_SALT = ethers.keccak256("InceptionLRT Bridge");
-const INCEPTION_SALT = "InceptionLRT Bridge";
-
 async function bridgeInit(initialOwner, operatorAddress) {
   const methodId = abiCoder.encodeFunctionSignature("initialize(address,address)");
   const params = abiCoder.encodeParameters(["address", "address"], [initialOwner, operatorAddress]);
@@ -39,11 +36,8 @@ async function deployBridge(bridgeTokens, bridgesToAdd) {
   const [deployer] = await ethers.getSigners();
   printBalance(deployer);
 
-  const chainID = network.config.chainId;
-  console.log(chainID);
-
   /// 1. get the implementation from config/addresses
-  const bridgePath = "./config/addresses/bridges/localhost.json";
+  const bridgePath = `./config/addresses/bridges/${network.name}.json`;
   console.log("bridgePath: ", bridgePath);
   const bridgeAddresses = readConfig(bridgePath.toString());
   console.log(bridgeAddresses);
@@ -59,10 +53,7 @@ async function deployBridge(bridgeTokens, bridgesToAdd) {
     console.error("factory address is null");
   }
 
-  console.log(factoryAddress);
-
-  const factoryFactory = await ethers.getContractFactory("BridgeFactory");
-  const factory = factoryFactory.attach(factoryAddress);
+  const factory = await ethers.getContractAt("BridgeFactory", factoryAddress);
 
   /******************************************
    ************ Proxy Deployment ************
@@ -78,13 +69,17 @@ async function deployBridge(bridgeTokens, bridgesToAdd) {
   /// Deploy TransparentUpgradeableProxy
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
   const proxyBytecode = ProxyFactory.bytecode;
-  const proxyAddress = (await factory.getDeploymentAddress(proxyBytecode, await deployer.getAddress())).toString();
+  const proxyAddress = (await factory.getDeploymentCreate2Address(proxyBytecode, await deployer.getAddress())).toString();
   console.log(`Bridge Proxy address: ${proxyAddress}`);
 
-  const calldata = await bridgeInit(await deployer.getAddress(), await deployer.getAddress());
+  tx = await factory.deployCreate2(proxyBytecode);
+  await tx.wait();
+
+  const calldata = await bridgeInit(await deployer.getAddress(), "");
 
   const bridgeProxy = ProxyFactory.attach(proxyAddress);
-  await bridgeProxy.initialize(implementationAddress, proxyAdminAddress, calldata);
+  tx = await bridgeProxy.initialize(implementationAddress, proxyAdminAddress, calldata);
+  await tx.wait();
 }
 
 module.exports = {

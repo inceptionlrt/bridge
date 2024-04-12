@@ -21,10 +21,10 @@ contract BridgeFactory is IFactory {
     function deployCreate2(
         bytes calldata creationCode
     ) external returns (address) {
-        return _deploy(creationCode, msg.sender);
+        return _deployCreate2(creationCode, msg.sender);
     }
 
-    function _deploy(
+    function _deployCreate2(
         bytes memory bytecode,
         address _sender
     ) internal returns (address) {
@@ -171,5 +171,22 @@ contract BridgeFactory is IFactory {
         _lockbox = CREATE3.deploy(_salt, _bytecode, 0);
 
         XERC20(_xerc20).setLockbox(_lockbox);
+    }
+
+    function deployCreate3(
+        bytes calldata creationCode,
+        bytes32 _salt
+    ) external returns (address) {
+        return _deployCreate3(creationCode, _salt);
+    }
+
+    function _deployCreate3(
+        bytes memory bytecode,
+        bytes32 _salt
+    ) internal returns (address) {
+        address addr = CREATE3.deploy(_salt, bytecode, 0);
+
+        emit ContractCreated(addr);
+        return addr;
     }
 }

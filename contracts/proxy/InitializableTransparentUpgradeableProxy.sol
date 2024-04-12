@@ -20,6 +20,7 @@ contract InitializableTransparentUpgradeableProxy is InitializableERC1967Proxy {
         address admin_,
         bytes memory _data
     ) external payable {
+        require(_implementation() == address(0));
         _upgradeToAndCall(_logic, _data, false);
         _changeAdmin(admin_);
     }

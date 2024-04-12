@@ -2,21 +2,13 @@ const fs = require("fs");
 const { ethers } = require("hardhat");
 const { printBalance } = require("../utils");
 
-const DEPLOYER_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-const DEPLOYER_NONCE = "59";
+const DEPLOYER_ADDRESS = "";
+const DEPLOYER_NONCE = "";
 
 const deployFactory = async () => {
   console.log("##################################################################");
   console.log("###################### Factory deployment #######################");
   console.log("##################################################################\n");
-
-  /**
-   * PreDeployed Requirements
-   */
-  // let factoryAddress = (await alreadyDeployed(network, "BridgeFactory", "")).toString();
-  // if (factoryAddress != "") {
-  //   console.error("BRIDGE IS DEPLOYED");
-  // }
 
   const [deployer] = await ethers.getSigners();
   if ((await deployer.getNonce()).toString() != DEPLOYER_NONCE) {
@@ -34,8 +26,7 @@ const deployFactory = async () => {
    * Factory Deployment
    */
 
-  /// TODO
-  const factory = await ethers.deployContract("BridgeFactory", { maxFeePerGas: "10934783720" });
+  const factory = await ethers.deployContract("BridgeFactory");
   await factory.waitForDeployment();
 
   const factoryAddress = await factory.getAddress();

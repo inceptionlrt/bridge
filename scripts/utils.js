@@ -4,7 +4,7 @@ const hre = require("hardhat");
 
 async function printBalance(account) {
   const initBalance = await account.provider.getBalance(account.address);
-  console.log("Account balance:", initBalance.toString());
+  console.log(`Account(${account.address}) balance: ${initBalance.toString()}`);
 }
 
 /// TODO
