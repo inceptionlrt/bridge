@@ -15,7 +15,7 @@ abstract contract InceptionBridgeStorage is
     uint256 internal constant _PROOF_LENGTH = 0x100;
 
     uint256 internal _globalNonce;
-    address internal _operatorAddress;
+    address public operator;
 
     mapping(bytes32 => bool) internal _usedProofs;
     mapping(uint256 => address) internal _bridgeAddressByChainId;
@@ -128,8 +128,8 @@ abstract contract InceptionBridgeStorage is
         if (operatorAddress == address(0x0)) {
             revert NullAddress();
         }
-        emit OperatorChanged(_operatorAddress, operatorAddress);
-        _operatorAddress = operatorAddress;
+        emit OperatorChanged(operator, operatorAddress);
+        operator = operatorAddress;
     }
 
     /*//////////////////////////

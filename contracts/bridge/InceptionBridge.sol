@@ -36,13 +36,13 @@ contract InceptionBridge is
 
     function initialize(
         address initialOwner,
-        address consensusAddress
+        address operator
     ) external initializer {
         __Ownable_init(initialOwner);
         __Pausable_init();
         __ReentrancyGuard_init();
 
-        __initInceptionBridgeStorage(consensusAddress);
+        __initInceptionBridgeStorage(operator);
     }
 
     /*//////////////////////////////
@@ -155,7 +155,7 @@ contract InceptionBridge is
             proofHash := keccak256(proof, _PROOF_LENGTH)
         }
 
-        if (ECDSA.recover(proofHash, proofSignature) != _operatorAddress) {
+        if (ECDSA.recover(proofHash, proofSignature) != operator) {
             revert WrongSignature();
         }
 
