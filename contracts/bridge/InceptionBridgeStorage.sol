@@ -12,6 +12,8 @@ abstract contract InceptionBridgeStorage is
     IInceptionBridgeStorage,
     IInceptionBridgeErrors
 {
+    uint256 internal constant _PROOF_LENGTH = 0x100;
+
     uint256 internal _globalNonce;
     address public operator;
 
@@ -41,6 +43,7 @@ abstract contract InceptionBridgeStorage is
     address internal _previousSender;
     uint256 internal _previousDepositBlockNum;
 
+    /// @notice WARNING: Keep it up-to-date
     uint256[50 - 15] private __gap;
 
     function __initInceptionBridgeStorage(address operatorAddress) internal {

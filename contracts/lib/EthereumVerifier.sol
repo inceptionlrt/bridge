@@ -8,7 +8,7 @@ import "../interfaces/IInceptionBridge.sol";
 library EthereumVerifier {
     bytes32 constant TOPIC_DEPOSITED =
         keccak256(
-            "Deposited(uint256,address,address,address,address,uint256,uint256,(bytes32,bytes32,uint256,address))"
+            "Deposited(uint256,address,address,address,address,address,uint256,uint256,(bytes32,bytes32,uint256,address))"
         );
 
     enum DepositType {
@@ -19,6 +19,7 @@ library EthereumVerifier {
     struct State {
         bytes32 receiptHash;
         address contractAddress;
+        address destinationContract;
         uint256 chainId;
         address sender;
         address receiver;
@@ -100,20 +101,25 @@ library EthereumVerifier {
         }
         /* topics */
         bytes32 mainTopic;
+        address destinationContract;
         address sender;
         address receiver;
         {
             uint256 topicsIter = logIter;
             logIter = CallDataRLPReader.next(logIter);
-            // Must be 3 topics RLP encoded: event signature, sender, receiver
+            // Must be 4 topics RLP encoded: event signature, destinationContract, sender, receiver
             // Each topic RLP encoded is 33 bytes (0xa0[32 bytes data])
-            // Total payload: 99 bytes. Since it's list with total size bigger than 55 bytes we need 2 bytes prefix (0xf863)
-            // So total size of RLP encoded topics array must be 101
-            if (CallDataRLPReader.itemLength(topicsIter) != 101) {
+            // Total payload: 132 bytes. Since it's list with total size bigger than 55 bytes we need 2 bytes prefix (0xf863)
+            // So total size of RLP encoded topics array must be 134
+            if (CallDataRLPReader.itemLength(topicsIter) != 134) {
                 return DepositType.None;
             }
             topicsIter = CallDataRLPReader.beginIteration(topicsIter);
             mainTopic = bytes32(CallDataRLPReader.toUintStrict(topicsIter));
+            topicsIter = CallDataRLPReader.next(topicsIter);
+            destinationContract = address(
+                bytes20(uint160(CallDataRLPReader.toUintStrict(topicsIter)))
+            );
             topicsIter = CallDataRLPReader.next(topicsIter);
             sender = address(
                 bytes20(uint160(CallDataRLPReader.toUintStrict(topicsIter)))
@@ -158,11 +164,12 @@ library EthereumVerifier {
         {
             uint256 structOffset;
             assembly {
-                // skip 5 fields: receiptHash, contractAddress, chainId, sender, receiver
-                structOffset := add(state, 0xa0)
+                // skip 6 fields: receiptHash, destinationContract, contractAddress, chainId, sender, receiver
+                structOffset := add(state, 0xc0)
                 calldatacopy(structOffset, ptr, len)
             }
         }
+        state.destinationContract = destinationContract;
         state.contractAddress = contractAddress;
         state.sender = sender;
         state.receiver = receiver;
