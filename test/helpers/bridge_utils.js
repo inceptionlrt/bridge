@@ -62,7 +62,7 @@ function encodeTransactionReceiptInvalidContractAddress(txReceipt) {
       Buffer.from(log.data.substr(2), "hex"),
     ];
   });
-  rlpLogs[1][0] = ethers.ZeroAddress;
+  rlpLogs[rlpLogs.length - 1][0] = ethers.ZeroAddress;
   const rlpReceipt = [
     // postStateOrStatus
     Web3.utils.numberToHex(Number(txReceipt.status)),
@@ -89,7 +89,7 @@ function encodeTransactionReceiptInvalidFromTokenAddress(txReceipt, data) {
       Buffer.from(log.data.substr(2), "hex"),
     ];
   });
-  rlpLogs[1][2] = Buffer.from(data.substr(2), "hex");
+  rlpLogs[rlpLogs.length - 1][2] = Buffer.from(data.substr(2), "hex");
   const rlpReceipt = [
     // postStateOrStatus
     Web3.utils.numberToHex(Number(txReceipt.status)),

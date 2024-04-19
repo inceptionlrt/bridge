@@ -37,6 +37,10 @@ interface IInceptionBridgeErrors {
 
     error UnknownDestination();
 
+    error WrongDestinationBridge();
+
+    error XERC20LockboxAlreadyAdded();
+
     /// @notice non-existing-bridge
     error UnknownDestinationChain();
 

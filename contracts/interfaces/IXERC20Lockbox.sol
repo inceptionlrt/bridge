@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "./IXERC20.sol";
+
 interface IXERC20LockboxErrors {
     /// @notice Reverts when a user tries to deposit native tokens on a non-native lockbox
     error IXERC20Lockbox_NotNative();
@@ -28,6 +31,10 @@ interface IXERC20Lockbox is IXERC20LockboxErrors {
      * @param _amount The amount of tokens withdrawn
      */
     event Withdraw(address _sender, uint256 _amount);
+
+    function XERC20() external view returns (IXERC20 xerc20);
+
+    function ERC20() external view returns (IERC20 erc20);
 
     /**
      * @notice Deposit ERC20 tokens into the lockbox

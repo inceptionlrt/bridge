@@ -40,6 +40,8 @@ interface IInceptionBridgeStorage {
     );
 
     event OperatorChanged(address indexed prevValue, address indexed newValue);
+
+    event XERC20LockboxAdded(address indexed token, address indexed lockbox);
 }
 
 interface IInceptionBridge {
