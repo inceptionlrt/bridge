@@ -40,13 +40,13 @@ contract InceptionBridge is
 
     function initialize(
         address initialOwner,
-        address operator
+        address notary
     ) external initializer {
         __Ownable_init(initialOwner);
         __Pausable_init();
         __ReentrancyGuard_init();
 
-        __initInceptionBridgeStorage(operator);
+        __initInceptionBridgeStorage(notary);
     }
 
     /*//////////////////////////////
@@ -180,7 +180,7 @@ contract InceptionBridge is
             proofHash := keccak256(proof, _PROOF_LENGTH)
         }
 
-        if (ECDSA.recover(proofHash, proofSignature) != operator)
+        if (ECDSA.recover(proofHash, proofSignature) != notary)
             revert WrongSignature();
 
         _withdraw(state, depositType, proof, proofHash);
@@ -253,8 +253,8 @@ contract InceptionBridge is
     ////// SET functions //////
     ////////////////////////*/
 
-    function setOperator(address operatorAddress) external onlyOwner {
-        _setOperator(operatorAddress);
+    function setNotary(address notaryAddress) external onlyOwner {
+        _setNotary(notaryAddress);
     }
 
     function setShortCap(

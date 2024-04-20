@@ -11,13 +11,12 @@ const {
 } = require("./helpers/bridge_utils");
 const { signMessageUsingPrivateKey } = require("./helpers/evm_utils");
 const { parseEther } = require("ethers");
-const config = require("../hardhat.config");
 
 // Constants
 const CHAIN_ID = "31337";
 
 // Addresses
-var deployer, operator, treasury, signer1, signer2;
+var deployer, notary, treasury, signer1, signer2;
 // Protocol Contracts
 var bridge1, bridge2, bridge3, bridgeFactory;
 var token1, token2, token3, destinationForToken1, tokenFactory;
@@ -55,7 +54,7 @@ async function deployXERC20(factory, baseTokenAddress, baseTokenName, baseTokenS
 }
 
 async function initIBridge() {
-  [deployer, operator, treasury, signer1, signer2] = await ethers.getSigners();
+  [deployer, notary, treasury, signer1, signer2] = await ethers.getSigners();
 
   tokenFactory = await ethers.getContractFactory("ERC20Mintable");
   console.log("=== Token1");
@@ -84,17 +83,17 @@ async function initIBridge() {
   // Bridge
   console.log("=== Bridge1");
   bridgeFactory = await ethers.getContractFactory("InceptionBridge");
-  bridge1 = await upgrades.deployProxy(bridgeFactory, [await deployer.getAddress(), operator.address], {
+  bridge1 = await upgrades.deployProxy(bridgeFactory, [await deployer.getAddress(), notary.address], {
     initializer: "initialize",
   });
   await bridge1.waitForDeployment();
   console.log("=== Bridge2");
-  bridge2 = await upgrades.deployProxy(bridgeFactory, [await deployer.getAddress(), operator.address], {
+  bridge2 = await upgrades.deployProxy(bridgeFactory, [await deployer.getAddress(), notary.address], {
     initializer: "initialize",
   });
   await bridge2.waitForDeployment();
   console.log("=== Bridge3");
-  bridge3 = await upgrades.deployProxy(bridgeFactory, [await deployer.getAddress(), operator.address], {
+  bridge3 = await upgrades.deployProxy(bridgeFactory, [await deployer.getAddress(), notary.address], {
     initializer: "initialize",
   });
   await bridge3.waitForDeployment();
@@ -215,7 +214,7 @@ describe("InceptionBridge", function () {
           const sender = arg.sender();
           const recipient = arg.recipient();
 
-          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
           const recipientBalanceBefore = await toToken.balanceOf(recipient);
           const totalSupplyBefore = await toToken.totalSupply();
 
@@ -304,7 +303,7 @@ describe("InceptionBridge", function () {
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), 666, signer2.address, amount);
         receipt = await tx1.wait();
 
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(operator, receipt);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(notary, receipt);
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature))
           .to.be.revertedWithCustomError(bridge2, "ReceiptWrongChain")
           .withArgs(CHAIN_ID, 666);
@@ -317,7 +316,7 @@ describe("InceptionBridge", function () {
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
         receipt = await tx1.wait();
 
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalDataInvalidContractAddress(operator, receipt);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalDataInvalidContractAddress(notary, receipt);
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature)).to.be.revertedWithCustomError(
           bridge2,
           "InvalidContractAddress"
@@ -342,7 +341,7 @@ describe("InceptionBridge", function () {
           [ethers.encodeBytes32String(await token1.symbol()), ethers.encodeBytes32String(await token1.name()), 0, ethers.ZeroAddress],
         ]).data;
 
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateInvalidWithdrawalData(operator, receipt, invalidData);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateInvalidWithdrawalData(notary, receipt, invalidData);
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature)).to.be.revertedWithCustomError(
           bridge2,
           "InvalidFromTokenAddress"
@@ -358,7 +357,7 @@ describe("InceptionBridge", function () {
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
         receipt = await tx1.wait();
 
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(operator, receipt);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(notary, receipt);
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature)).to.be.revertedWithCustomError(
           bridge2,
           "UnknownBridge"
@@ -375,14 +374,14 @@ describe("InceptionBridge", function () {
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
         receipt = await tx1.wait();
 
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(operator, receipt);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(notary, receipt);
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature)).to.be.revertedWithCustomError(
           bridge2,
           "UnknownDestination"
         );
       });
 
-      it("withdraw: reverts when signed by not an operator", async function () {
+      it("withdraw: reverts when signed by not an notary", async function () {
         const amount = parseEther("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
@@ -403,7 +402,7 @@ describe("InceptionBridge", function () {
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
         receipt = await tx1.wait();
 
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(operator, receipt);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(notary, receipt);
         await bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature);
 
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature)).to.be.revertedWithCustomError(
@@ -418,7 +417,7 @@ describe("InceptionBridge", function () {
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
         receipt = await tx1.wait();
-        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(operator, receipt);
+        const [encodedProof, rawReceipt, proofSignature, proofHash] = generateWithdrawalData(notary, receipt);
 
         await bridge2.pause();
         await expect(bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature)).to.be.revertedWithCustomError(
@@ -464,7 +463,7 @@ describe("InceptionBridge", function () {
           expect(await bridge1.longCapsWithdraw(await token1.getAddress(), long)).to.be.eq(0n);
         });
         it(`CapsWithdraw growths with withdrawals: ${arg.amount}`, async function () {
-          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
           await bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature);
           token2WithdrawDayCap += arg.amount;
 
@@ -513,7 +512,7 @@ describe("InceptionBridge", function () {
           expect(await bridge1.longCapsWithdraw(await token1.getAddress(), long)).to.be.eq(0n);
         });
         it(`withdrawTxCap per hour: ${arg.amount}`, async function () {
-          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
           await bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature);
           token2WithdrawDayCap += arg.amount;
 
@@ -606,7 +605,7 @@ describe("InceptionBridge", function () {
           for (const amount of arg.successfulDeposits) {
             tx = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer1.address, amount);
             receipt = await tx.wait();
-            const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+            const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
             await bridge2.connect(signer1).withdraw(encodedProof, rawReceipt, proofSignature);
             tokenShortCap += amount;
           }
@@ -614,7 +613,7 @@ describe("InceptionBridge", function () {
           const lastAmount = await arg.lastDeposit(tokenShortCap);
           const tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, arg.lastSigner().address, lastAmount);
           receipt = await tx1.wait();
-          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
           const shortCap = await bridge2.shortCaps(await destinationForToken1.getAddress());
           await expect(bridge2.connect(arg.lastSigner()).withdraw(encodedProof, rawReceipt, proofSignature))
             .to.be.revertedWithCustomError(bridge2, "ShortCapExceeded")
@@ -657,7 +656,7 @@ describe("InceptionBridge", function () {
           expect(await bridge1.longCapsWithdraw(await token1.getAddress(), long)).to.be.eq(0n);
         });
         it(`withdrawTxCap per day: ${arg.amount}`, async function () {
-          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
           await bridge2.connect(signer2).withdraw(encodedProof, rawReceipt, proofSignature);
 
           const short = await bridge2.getCurrentStamp(shortCapDuration);
@@ -750,7 +749,7 @@ describe("InceptionBridge", function () {
           for (const amount of arg.successfulDeposits) {
             tx = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer1.address, amount);
             receipt = await tx.wait();
-            const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+            const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
             await bridge2.connect(signer1).withdraw(encodedProof, rawReceipt, proofSignature);
             tokenLongCap += amount;
           }
@@ -758,7 +757,7 @@ describe("InceptionBridge", function () {
           const lastAmount = await arg.lastDeposit(tokenLongCap);
           const tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, arg.lastSigner().address, lastAmount);
           receipt = await tx1.wait();
-          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(operator, receipt);
+          const [encodedProof, rawReceipt, proofSignature, proofHash, receiptHash] = generateWithdrawalData(notary, receipt);
           const longCap = await bridge2.longCaps(await destinationForToken1.getAddress());
           await expect(bridge2.connect(arg.lastSigner()).withdraw(encodedProof, rawReceipt, proofSignature))
             .to.be.revertedWithCustomError(bridge2, "LongCapExceeded")
@@ -775,53 +774,49 @@ describe("InceptionBridge", function () {
       await snapshot.restore();
     });
 
-    describe("XERC20 lockbox", function() {
-
-      it("setXERC20Lockbox", async function() {
+    describe("XERC20 lockbox", function () {
+      it("setXERC20Lockbox", async function () {
         const token = ethers.Wallet.createRandom().address;
         const lockBox = ethers.Wallet.createRandom().address;
         expect(await bridge3.xerc20TokenRegistry(token)).to.be.eq(ethers.ZeroAddress);
 
-        await expect(bridge3.setXERC20Lockbox(token, lockBox))
-          .to.emit(bridge3, "XERC20LockboxAdded")
-          .withArgs(token, lockBox);
+        await expect(bridge3.setXERC20Lockbox(token, lockBox)).to.emit(bridge3, "XERC20LockboxAdded").withArgs(token, lockBox);
 
         expect(await bridge3.xerc20TokenRegistry(token)).to.be.eq(lockBox);
-      })
+      });
 
-      it("setXERC20Lockbox: reverts when token is 0 address", async function() {
+      it("setXERC20Lockbox: reverts when token is 0 address", async function () {
         const token = ethers.ZeroAddress;
         const lockBox = ethers.Wallet.createRandom().address;
 
-        await expect(bridge3.setXERC20Lockbox(token, lockBox))
-          .to.be.revertedWithCustomError(bridge3, "NullAddress");
-      })
+        await expect(bridge3.setXERC20Lockbox(token, lockBox)).to.be.revertedWithCustomError(bridge3, "NullAddress");
+      });
 
-      it("setXERC20Lockbox: reverts when lockbox is 0 address", async function() {
+      it("setXERC20Lockbox: reverts when lockbox is 0 address", async function () {
         const token = ethers.Wallet.createRandom().address;
         const lockBox = ethers.ZeroAddress;
 
-        await expect(bridge3.setXERC20Lockbox(token, lockBox))
-          .to.be.revertedWithCustomError(bridge3, "NullAddress");
-      })
+        await expect(bridge3.setXERC20Lockbox(token, lockBox)).to.be.revertedWithCustomError(bridge3, "NullAddress");
+      });
 
-      it("setXERC20Lockbox: reverts when already set", async function() {
+      it("setXERC20Lockbox: reverts when already set", async function () {
         const token = ethers.Wallet.createRandom().address;
         const lockBox = ethers.Wallet.createRandom().address;
         const newLockBox = ethers.Wallet.createRandom().address;
 
         await bridge3.setXERC20Lockbox(token, lockBox);
-        await expect(bridge3.setXERC20Lockbox(token, newLockBox))
-          .to.be.revertedWithCustomError(bridge3, "XERC20LockboxAlreadyAdded");
-      })
+        await expect(bridge3.setXERC20Lockbox(token, newLockBox)).to.be.revertedWithCustomError(bridge3, "XERC20LockboxAlreadyAdded");
+      });
 
       it("setXERC20Lockbox: reverts when called by not an owner", async function () {
         const token = ethers.Wallet.createRandom().address;
         const lockBox = ethers.Wallet.createRandom().address;
-        await expect(bridge3.connect(signer1).setXERC20Lockbox(token, lockBox))
-          .to.revertedWithCustomError(bridge3, "OwnableUnauthorizedAccount");
+        await expect(bridge3.connect(signer1).setXERC20Lockbox(token, lockBox)).to.revertedWithCustomError(
+          bridge3,
+          "OwnableUnauthorizedAccount"
+        );
       });
-    })
+    });
 
     describe("Add bridge", function () {
       it("addBridge adds bridge address for the chain", async function () {
@@ -852,8 +847,10 @@ describe("InceptionBridge", function () {
       });
 
       it("addBridge: reverts when called by not an owner", async function () {
-        await expect(bridge3.connect(signer1).addBridge(await bridge1.getAddress(), ANOTHER_CHAIN))
-          .to.revertedWithCustomError(bridge3, "OwnableUnauthorizedAccount");
+        await expect(bridge3.connect(signer1).addBridge(await bridge1.getAddress(), ANOTHER_CHAIN)).to.revertedWithCustomError(
+          bridge3,
+          "OwnableUnauthorizedAccount"
+        );
       });
     });
 
@@ -997,17 +994,17 @@ describe("InceptionBridge", function () {
       });
     });
 
-    describe("Operator", function () {
-      it("setOperator", async function () {
-        await expect(bridge3.setOperator(signer1)).to.emit(bridge3, "OperatorChanged").withArgs(operator, signer1);
+    describe("Notary", function () {
+      it("setNotary", async function () {
+        await expect(bridge3.setNotary(signer1)).to.emit(bridge3, "NotaryChanged").withArgs(notary, signer1);
       });
 
-      it("setOperator: reverts when set to 0", async function () {
-        await expect(bridge3.setOperator(ethers.ZeroAddress)).to.revertedWithCustomError(bridge3, "NullAddress");
+      it("setNotary: reverts when set to 0", async function () {
+        await expect(bridge3.setNotary(ethers.ZeroAddress)).to.revertedWithCustomError(bridge3, "NullAddress");
       });
 
-      it("setOperator: reverts when called by not an owner", async function () {
-        await expect(bridge3.connect(signer1).setOperator(signer1)).to.revertedWithCustomError(bridge3, "OwnableUnauthorizedAccount");
+      it("setNotary: reverts when called by not an owner", async function () {
+        await expect(bridge3.connect(signer1).setNotary(signer1)).to.revertedWithCustomError(bridge3, "OwnableUnauthorizedAccount");
       });
     });
 

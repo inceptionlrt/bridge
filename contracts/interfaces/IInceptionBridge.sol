@@ -39,7 +39,7 @@ interface IInceptionBridgeStorage {
         uint256 toChain
     );
 
-    event OperatorChanged(address indexed prevValue, address indexed newValue);
+    event NotaryChanged(address indexed prevValue, address indexed newValue);
 
     event XERC20LockboxAdded(address indexed token, address indexed lockbox);
 }

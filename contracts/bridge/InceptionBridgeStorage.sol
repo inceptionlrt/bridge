@@ -15,7 +15,7 @@ abstract contract InceptionBridgeStorage is
     uint256 internal constant _PROOF_LENGTH = 0x100;
 
     uint256 internal _globalNonce;
-    address public operator;
+    address public notary;
 
     mapping(bytes32 => bool) internal _usedProofs;
     mapping(uint256 => address) internal _bridgeAddressByChainId;
@@ -49,8 +49,8 @@ abstract contract InceptionBridgeStorage is
     /// @notice WARNING: Keep it up-to-date
     uint256[50 - 16] private __gap;
 
-    function __initInceptionBridgeStorage(address operatorAddress) internal {
-        _setOperator(operatorAddress);
+    function __initInceptionBridgeStorage(address notaryAddress) internal {
+        _setNotary(notaryAddress);
         _setDefaultCrosschainThreshold();
     }
 
@@ -127,11 +127,11 @@ abstract contract InceptionBridgeStorage is
         longCapsWithdraw[token][getCurrentStamp(longCapDuration)] += amount;
     }
 
-    function _setOperator(address operatorAddress) internal {
-        if (operatorAddress == address(0x0)) revert NullAddress();
+    function _setNotary(address notaryAddress) internal {
+        if (notaryAddress == address(0x0)) revert NullAddress();
 
-        emit OperatorChanged(operator, operatorAddress);
-        operator = operatorAddress;
+        emit NotaryChanged(notary, notaryAddress);
+        notary = notaryAddress;
     }
 
     /*//////////////////////////
