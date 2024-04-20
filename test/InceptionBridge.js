@@ -11,6 +11,7 @@ const {
 } = require("./helpers/bridge_utils");
 const { signMessageUsingPrivateKey } = require("./helpers/evm_utils");
 const { parseEther } = require("ethers");
+const config = require("../hardhat.config");
 
 // Constants
 const CHAIN_ID = "31337";
@@ -26,12 +27,12 @@ async function deployXERC20(factory, baseTokenAddress, baseTokenName, baseTokenS
   tx = await factory.deployXERC20(baseTokenName, baseTokenSymbol);
   receipt = await tx.wait();
   let event = receipt.logs.find((e) => e.eventName === "XERC20Deployed");
-  xERC20Address = event.args._xerc20;
+  let xERC20Address = event.args._xerc20;
 
   tx = await factory.deployLockbox(xERC20Address, baseTokenAddress, false);
   receipt = await tx.wait();
   event = receipt.logs.find((e) => e.eventName === "LockboxDeployed");
-  lockBoxAddress = event.args._lockbox;
+  let lockBoxAddress = event.args._lockbox;
 
   await bridge1.setXERC20Lockbox(baseTokenAddress, lockBoxAddress);
 
@@ -774,6 +775,54 @@ describe("InceptionBridge", function () {
       await snapshot.restore();
     });
 
+    describe("XERC20 lockbox", function() {
+
+      it("setXERC20Lockbox", async function() {
+        const token = ethers.Wallet.createRandom().address;
+        const lockBox = ethers.Wallet.createRandom().address;
+        expect(await bridge3.xerc20TokenRegistry(token)).to.be.eq(ethers.ZeroAddress);
+
+        await expect(bridge3.setXERC20Lockbox(token, lockBox))
+          .to.emit(bridge3, "XERC20LockboxAdded")
+          .withArgs(token, lockBox);
+
+        expect(await bridge3.xerc20TokenRegistry(token)).to.be.eq(lockBox);
+      })
+
+      it("setXERC20Lockbox: reverts when token is 0 address", async function() {
+        const token = ethers.ZeroAddress;
+        const lockBox = ethers.Wallet.createRandom().address;
+
+        await expect(bridge3.setXERC20Lockbox(token, lockBox))
+          .to.be.revertedWithCustomError(bridge3, "NullAddress");
+      })
+
+      it("setXERC20Lockbox: reverts when lockbox is 0 address", async function() {
+        const token = ethers.Wallet.createRandom().address;
+        const lockBox = ethers.ZeroAddress;
+
+        await expect(bridge3.setXERC20Lockbox(token, lockBox))
+          .to.be.revertedWithCustomError(bridge3, "NullAddress");
+      })
+
+      it("setXERC20Lockbox: reverts when already set", async function() {
+        const token = ethers.Wallet.createRandom().address;
+        const lockBox = ethers.Wallet.createRandom().address;
+        const newLockBox = ethers.Wallet.createRandom().address;
+
+        await bridge3.setXERC20Lockbox(token, lockBox);
+        await expect(bridge3.setXERC20Lockbox(token, newLockBox))
+          .to.be.revertedWithCustomError(bridge3, "XERC20LockboxAlreadyAdded");
+      })
+
+      it("setXERC20Lockbox: reverts when called by not an owner", async function () {
+        const token = ethers.Wallet.createRandom().address;
+        const lockBox = ethers.Wallet.createRandom().address;
+        await expect(bridge3.connect(signer1).setXERC20Lockbox(token, lockBox))
+          .to.revertedWithCustomError(bridge3, "OwnableUnauthorizedAccount");
+      });
+    })
+
     describe("Add bridge", function () {
       it("addBridge adds bridge address for the chain", async function () {
         await expect(bridge3.addBridge(await bridge1.getAddress(), ANOTHER_CHAIN))
@@ -803,10 +852,8 @@ describe("InceptionBridge", function () {
       });
 
       it("addBridge: reverts when called by not an owner", async function () {
-        await expect(bridge3.connect(signer1).addBridge(await bridge1.getAddress(), ANOTHER_CHAIN)).to.revertedWithCustomError(
-          bridge3,
-          "OwnableUnauthorizedAccount"
-        );
+        await expect(bridge3.connect(signer1).addBridge(await bridge1.getAddress(), ANOTHER_CHAIN))
+          .to.revertedWithCustomError(bridge3, "OwnableUnauthorizedAccount");
       });
     });
 
