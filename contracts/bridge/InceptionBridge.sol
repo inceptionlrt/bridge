@@ -121,15 +121,15 @@ contract InceptionBridge is
         address sender,
         uint256 amount
     ) internal {
-        IERC20(fromToken).safeTransferFrom(sender, address(this), amount);
+        address xerc20 = address(IXERC20Lockbox(lockbox).XERC20());
+        if (xerc20 == address(0)) revert XERC20ZeroAddress();
+
         /// deposit into the lockBox
+        IERC20(fromToken).safeTransferFrom(sender, address(this), amount);
         IERC20(fromToken).safeApprove(lockbox, amount);
         IXERC20Lockbox(lockbox).deposit(amount);
-        _safeBurn(
-            address(IXERC20Lockbox(lockbox).XERC20()),
-            address(this),
-            amount
-        );
+
+        _safeBurn(xerc20, address(this), amount);
     }
 
     /*/////////////////////////////////
@@ -214,11 +214,10 @@ contract InceptionBridge is
         if (lockbox == address(0)) {
             _safeMint(state.toToken, state.receiver, state.amount);
         } else {
-            _safeMint(
-                address(IXERC20Lockbox(lockbox).XERC20()),
-                address(this),
-                state.amount
-            );
+            address xerc20 = address(IXERC20Lockbox(lockbox).XERC20());
+            if (xerc20 == address(0)) revert XERC20ZeroAddress();
+
+            _safeMint(xerc20, address(this), state.amount);
             IXERC20Lockbox(lockbox).withdrawTo(state.receiver, state.amount);
         }
 
