@@ -15,7 +15,7 @@ abstract contract InceptionBridgeStorage is
     uint256 internal constant _PROOF_LENGTH = 0x100;
 
     uint256 internal _globalNonce;
-    address public operator;
+    address public notary;
 
     mapping(bytes32 => bool) internal _usedProofs;
     mapping(uint256 => address) internal _bridgeAddressByChainId;
@@ -43,11 +43,14 @@ abstract contract InceptionBridgeStorage is
     address internal _previousSender;
     uint256 internal _previousDepositBlockNum;
 
-    /// @notice WARNING: Keep it up-to-date
-    uint256[50 - 15] private __gap;
+    /// token -> lockbox
+    mapping(address => address) public xerc20TokenRegistry;
 
-    function __initInceptionBridgeStorage(address operatorAddress) internal {
-        _setOperator(operatorAddress);
+    /// @notice WARNING: Keep it up-to-date
+    uint256[50 - 16] private __gap;
+
+    function __initInceptionBridgeStorage(address notaryAddress) internal {
+        _setNotary(notaryAddress);
         _setDefaultCrosschainThreshold();
     }
 
@@ -124,12 +127,11 @@ abstract contract InceptionBridgeStorage is
         longCapsWithdraw[token][getCurrentStamp(longCapDuration)] += amount;
     }
 
-    function _setOperator(address operatorAddress) internal {
-        if (operatorAddress == address(0x0)) {
-            revert NullAddress();
-        }
-        emit OperatorChanged(operator, operatorAddress);
-        operator = operatorAddress;
+    function _setNotary(address notaryAddress) internal {
+        if (notaryAddress == address(0x0)) revert NullAddress();
+
+        emit NotaryChanged(notary, notaryAddress);
+        notary = notaryAddress;
     }
 
     /*//////////////////////////
@@ -137,9 +139,8 @@ abstract contract InceptionBridgeStorage is
     ////////////////////////*/
 
     function _setShortCap(address token, uint256 newValue) internal {
-        if (token == address(0x0)) {
-            revert NullAddress();
-        }
+        if (token == address(0x0)) revert NullAddress();
+
         uint256 prevValue = shortCaps[token];
         emit ShortCapChanged(token, prevValue, newValue);
         shortCaps[token] = newValue;
@@ -199,9 +200,9 @@ abstract contract InceptionBridgeStorage is
         uint256 destinationChain,
         address toToken
     ) internal {
-        if (_bridgeAddressByChainId[destinationChain] == address(0)) {
+        if (_bridgeAddressByChainId[destinationChain] == address(0))
             revert UnknownDestinationChain();
-        }
+
         bytes32 direction = keccak256(
             abi.encodePacked(
                 fromToken,
@@ -211,9 +212,9 @@ abstract contract InceptionBridgeStorage is
             )
         );
 
-        if (_destinationTokens[direction] != address(0)) {
+        if (_destinationTokens[direction] != address(0))
             revert DestinationAlreadyExists();
-        }
+
         _destinationTokens[direction] = toToken;
 
         emit DestinationAdded(fromToken, toToken, destinationChain);
@@ -224,9 +225,9 @@ abstract contract InceptionBridgeStorage is
         uint256 destinationChain,
         address toToken
     ) internal {
-        if (_bridgeAddressByChainId[destinationChain] == address(0)) {
+        if (_bridgeAddressByChainId[destinationChain] == address(0))
             revert UnknownDestinationChain();
-        }
+
         bytes32 direction = keccak256(
             abi.encodePacked(
                 fromToken,
@@ -236,12 +237,23 @@ abstract contract InceptionBridgeStorage is
             )
         );
 
-        if (_destinationTokens[direction] != toToken) {
+        if (_destinationTokens[direction] != toToken)
             revert UnknownDestination();
-        }
+
         delete _destinationTokens[direction];
 
         emit DestinationRemoved(fromToken, toToken, destinationChain);
+    }
+
+    function _setXERC20Lockbox(address token, address lockbox) internal {
+        if (address(token) == address(0) || address(lockbox) == address(0))
+            revert NullAddress();
+
+        if (xerc20TokenRegistry[token] != address(0))
+            revert XERC20LockboxAlreadyAdded();
+
+        emit XERC20LockboxAdded(token, lockbox);
+        xerc20TokenRegistry[token] = lockbox;
     }
 
     function getCurrentStamp(uint256 duration) public view returns (uint256) {

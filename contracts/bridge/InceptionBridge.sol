@@ -9,10 +9,12 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "./InceptionBridgeStorage.sol";
 
 import "../interfaces/IInceptionBridge.sol";
+import "../interfaces/IXERC20Lockbox.sol";
 
 import "../lib/EthereumVerifier.sol";
 import "../lib/ProofParser.sol";
@@ -28,6 +30,8 @@ contract InceptionBridge is
     InceptionBridgeStorage,
     IInceptionBridge
 {
+    using SafeERC20 for IERC20;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     /// @dev payable modifier reduces the deployment cost
     constructor() payable {
@@ -36,13 +40,13 @@ contract InceptionBridge is
 
     function initialize(
         address initialOwner,
-        address operator
+        address notary
     ) external initializer {
         __Ownable_init(initialOwner);
         __Pausable_init();
         __ReentrancyGuard_init();
 
-        __initInceptionBridgeStorage(operator);
+        __initInceptionBridgeStorage(notary);
     }
 
     /*//////////////////////////////
@@ -82,7 +86,12 @@ contract InceptionBridge is
         }
         address sender = msg.sender;
 
-        _safeBurn(fromToken, sender, amount);
+        address lockbox = xerc20TokenRegistry[fromToken];
+        if (lockbox == address(0)) {
+            _safeBurn(fromToken, sender, amount);
+        } else {
+            _depositIntoLockbox(lockbox, fromToken, sender, amount);
+        }
 
         Metadata memory metaData = Metadata(
             Utils.stringToBytes32(IERC20Extra(fromToken).name()),
@@ -104,6 +113,23 @@ contract InceptionBridge is
             _globalNonce,
             metaData
         );
+    }
+
+    function _depositIntoLockbox(
+        address lockbox,
+        address fromToken,
+        address sender,
+        uint256 amount
+    ) internal {
+        address xerc20 = address(IXERC20Lockbox(lockbox).XERC20());
+        if (xerc20 == address(0)) revert XERC20ZeroAddress();
+
+        /// deposit into the lockBox
+        IERC20(fromToken).safeTransferFrom(sender, address(this), amount);
+        IERC20(fromToken).safeApprove(lockbox, amount);
+        IXERC20Lockbox(lockbox).deposit(amount);
+
+        _safeBurn(xerc20, address(this), amount);
     }
 
     /*/////////////////////////////////
@@ -132,20 +158,19 @@ contract InceptionBridge is
             EthereumVerifier.DepositType depositType
         ) = EthereumVerifier.parseTransactionReceipt(receiptOffset);
 
-        if (state.chainId != block.chainid) {
+        if (state.chainId != block.chainid)
             revert ReceiptWrongChain(block.chainid, state.chainId);
-        }
 
         ProofParser.Proof memory proof = ProofParser.parseProof(proofOffset);
-        if (state.contractAddress == address(0)) {
+
+        if (state.contractAddress == address(0))
             revert InvalidContractAddress();
-        }
+
         if (state.destinationContract != address(this))
             revert WrongDestinationBridge();
 
-        if (_bridgeAddressByChainId[proof.chainId] != state.contractAddress) {
+        if (_bridgeAddressByChainId[proof.chainId] != state.contractAddress)
             revert UnknownBridge();
-        }
 
         state.receiptHash = keccak256(rawReceipt);
         proof.status = 0x01;
@@ -155,9 +180,8 @@ contract InceptionBridge is
             proofHash := keccak256(proof, _PROOF_LENGTH)
         }
 
-        if (ECDSA.recover(proofHash, proofSignature) != operator) {
+        if (ECDSA.recover(proofHash, proofSignature) != notary)
             revert WrongSignature();
-        }
 
         _withdraw(state, depositType, proof, proofHash);
     }
@@ -181,16 +205,21 @@ contract InceptionBridge is
         EthereumVerifier.State memory state,
         ProofParser.Proof memory proof
     ) internal {
-        if (state.fromToken == address(0)) {
-            revert InvalidFromTokenAddress();
-        }
-        if (getDestination(state.toToken, proof.chainId) != state.fromToken) {
+        if (state.fromToken == address(0)) revert InvalidFromTokenAddress();
+        if (getDestination(state.toToken, proof.chainId) != state.fromToken)
             revert UnknownDestination();
-        }
 
         _updateWithdrawCaps(state.toToken, state.amount);
+        address lockbox = xerc20TokenRegistry[state.toToken];
+        if (lockbox == address(0)) {
+            _safeMint(state.toToken, state.receiver, state.amount);
+        } else {
+            address xerc20 = address(IXERC20Lockbox(lockbox).XERC20());
+            if (xerc20 == address(0)) revert XERC20ZeroAddress();
 
-        _safeMint(state.toToken, state.receiver, state.amount);
+            _safeMint(xerc20, address(this), state.amount);
+            IXERC20Lockbox(lockbox).withdrawTo(state.receiver, state.amount);
+        }
 
         emit Withdrawn(
             state.receiptHash,
@@ -223,8 +252,8 @@ contract InceptionBridge is
     ////// SET functions //////
     ////////////////////////*/
 
-    function setOperator(address operatorAddress) external onlyOwner {
-        _setOperator(operatorAddress);
+    function setNotary(address notaryAddress) external onlyOwner {
+        _setNotary(notaryAddress);
     }
 
     function setShortCap(
@@ -271,6 +300,13 @@ contract InceptionBridge is
         address toToken
     ) external onlyOwner {
         _removeDestination(fromToken, destinationChain, toToken);
+    }
+
+    function setXERC20Lockbox(
+        address token,
+        address xerc20Lockbox
+    ) external onlyOwner {
+        _setXERC20Lockbox(token, xerc20Lockbox);
     }
 
     /*///////////////////////////////
