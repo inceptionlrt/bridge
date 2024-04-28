@@ -5,15 +5,14 @@ const { ethers, network } = require("hardhat");
  ***************************************/
 
 async function setupBridge(bridgeConfig) {
-  const bridge = await ethers.getContractAt("InceptionBridge", "");
-
   const localChainID = network.config.chainId;
   console.log(`chainID: ${localChainID}`);
 
   const bridgeSetup = bridgeConfig[localChainID];
-
   const bridgesToAdd = bridgeSetup["bridgesToAdd"];
   const tokenToAdd = bridgeSetup["tokens"];
+
+  const bridge = await ethers.getContractAt("InceptionBridge", bridgeSetup["bridgeAddress"]);
 
   console.log("############################################################");
   console.log("################ Set up destination bridges ################");
