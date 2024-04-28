@@ -11,16 +11,16 @@ const deployFactory = async () => {
   console.log("##################################################################\n");
 
   const [deployer] = await ethers.getSigners();
+  await printBalance(deployer);
+
   if ((await deployer.getNonce()).toString() != DEPLOYER_NONCE) {
-    console.error("WRONG DEPLOYER NONCE");
+    console.error("WRONG DEPLOYER NONCE: ", (await deployer.getNonce()).toString());
     return;
   }
   if ((await deployer.getAddress()).toString() != DEPLOYER_ADDRESS) {
-    console.error("WRONG DEPLOYER NONCE");
+    console.error("WRONG DEPLOYER ADDRESS");
     return;
   }
-
-  await printBalance(deployer);
 
   /**
    * Factory Deployment
