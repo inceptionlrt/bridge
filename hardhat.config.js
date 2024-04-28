@@ -9,6 +9,7 @@ require("@openzeppelin/hardhat-upgrades");
  */
 
 require("./tasks/setup-bridge");
+require("./tasks/deploy-xerc20");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
