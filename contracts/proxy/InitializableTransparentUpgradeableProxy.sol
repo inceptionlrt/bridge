@@ -20,7 +20,10 @@ contract InitializableTransparentUpgradeableProxy is InitializableERC1967Proxy {
         address admin_,
         bytes memory _data
     ) external payable {
-        require(_implementation() == address(0));
+        require(
+            _implementation() == address(0),
+            "implementation has already been set"
+        );
         _upgradeToAndCall(_logic, _data, false);
         _changeAdmin(admin_);
     }
@@ -161,6 +164,6 @@ contract InitializableTransparentUpgradeableProxy is InitializableERC1967Proxy {
      * emulate some proxy functions being non-payable while still allowing value to pass through.
      */
     function _requireZeroValue() private {
-        require(msg.value == 0);
+        require(msg.value == 0, "zero value is required");
     }
 }

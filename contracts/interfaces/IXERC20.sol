@@ -11,6 +11,11 @@ interface IERC20Errors {
      * @notice Reverts when caller is not the factory
      */
     error IXERC20_NotFactory();
+
+    /**
+     * @notice Reverts when caller sets too small _limit
+     */
+    error IXERC20_WrongBridgeLimit();
 }
 
 interface IXERC20 is IERC20Errors {

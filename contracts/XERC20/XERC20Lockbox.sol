@@ -68,7 +68,7 @@ contract XERC20Lockbox is IXERC20Lockbox {
      * @notice Deposit the native asset into the lockbox, and send the XERC20 to a user
      * @param _to The user to send the XERC20 to
      */
-    function depositNativeTo(address _to) public payable {
+    function depositNativeTo(address _to) external payable {
         if (!IS_NATIVE) revert IXERC20Lockbox_NotNative();
         _deposit(_to, msg.value);
     }
@@ -96,6 +96,7 @@ contract XERC20Lockbox is IXERC20Lockbox {
      * @param _amount The amount of tokens to withdraw
      */
     function _withdraw(address _to, uint256 _amount) internal {
+        if (_to == address(this)) revert IXERC20Lockbox_WrongReceiver();
         XERC20.burn(msg.sender, _amount);
         if (IS_NATIVE) {
             (bool _success, ) = payable(_to).call{value: _amount}("");
@@ -112,6 +113,7 @@ contract XERC20Lockbox is IXERC20Lockbox {
      * @param _amount The amount of tokens to deposit
      */
     function _deposit(address _to, uint256 _amount) internal {
+        if (_to == address(this)) revert IXERC20Lockbox_WrongReceiver();
         if (!IS_NATIVE)
             ERC20.safeTransferFrom(msg.sender, address(this), _amount);
 
