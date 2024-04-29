@@ -15,7 +15,11 @@
         "shortCap": "10000000000000000000",
         "longCap": "1000000000000000000000"
       }
-    ]
+    ],
+    "xerc20": {
+      "lockboxAddress": "",
+      "token": ""
+    }
   },
   "195": {
     "bridgeAddress": "0xCDeA808c1C43F95309C8ca398DF41a257aF2Dc8a",
