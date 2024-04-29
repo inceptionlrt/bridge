@@ -75,7 +75,7 @@ module.exports = {
     linea_testnet: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
       url: `${process.env.RPC_URL_LINEA_TESTNET}`,
-      chainId: 59140,
+      chainId: 59141,
       gas: 8000000,
     },
   },

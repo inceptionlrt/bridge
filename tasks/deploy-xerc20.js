@@ -1,13 +1,18 @@
-// Assuming config.json contains the necessary values
-const configTemplate = require("./deploy_template.json");
+const fs = require("fs");
+const configTemplate = require("./templates/deploy_template.json");
 
-/// UP-TO-DATE
-const factoryAddress = "";
+let factoryAddress;
 
 task("deploy-xerc20", "")
   .addParam("execute", "whether deploy contracts or not (1/0)")
   .setAction(async (taskArgs) => {
     const execute = taskArgs["execute"];
+
+    const factoryPath = `./config/addresses/factory/${network.name}.json`;
+    factoryAddress = (await readConfig(factoryPath)).factoryAddress;
+    if (factoryAddress.toString() == "") {
+      console.error("factory address is null");
+    }
 
     const deployData = await generateCalldata(configTemplate);
     if (execute == "0") {
@@ -68,3 +73,15 @@ const generateCalldata = async (configFile) => {
     tokenSymbol: configFile.tokenSymbol,
   };
 };
+
+function readConfig(dirPath) {
+  try {
+    const fileContent = fs.readFileSync(dirPath, "utf8");
+    const jsonData = JSON.parse(fileContent);
+    return jsonData;
+  } catch (error) {
+    console.error("Error reading JSON files:", error);
+  }
+
+  return "";
+}

@@ -4,7 +4,7 @@ const { printBalance } = require("../utils");
 
 async function deployBridgeImpl() {
   [deployer] = await ethers.getSigners();
-  printBalance(deployer);
+  await printBalance(deployer);
 
   const bridgeImplFactory = await ethers.deployContract("InceptionBridge");
   await bridgeImplFactory.waitForDeployment();
