@@ -203,6 +203,9 @@ abstract contract InceptionBridgeStorage is
         if (_bridgeAddressByChainId[destinationChain] == address(0))
             revert UnknownDestinationChain();
 
+        if (fromToken == address(0) || toToken == address(0))
+            revert NullAddress();
+
         bytes32 direction = keccak256(
             abi.encodePacked(
                 fromToken,
