@@ -54,7 +54,7 @@ contract BridgeFactory is IFactory {
     function getDeploymentCreate2Address(
         bytes memory bytecode,
         address _sender
-    ) public view returns (address) {
+    ) external view returns (address) {
         bytes32 salt = _getSalt(_sender);
         bytes32 rawAddress = keccak256(
             abi.encodePacked(

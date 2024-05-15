@@ -13,6 +13,9 @@ interface IXERC20LockboxErrors {
 
     /// @notice Reverts when a user tries to withdraw and the call fails
     error IXERC20Lockbox_WithdrawFailed();
+
+    /// @notice Reverts when a user tries to withdraw to the XERC20Lockbox itself
+    error IXERC20Lockbox_WrongReceiver();
 }
 
 interface IXERC20Lockbox is IXERC20LockboxErrors {
