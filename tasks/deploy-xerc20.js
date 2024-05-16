@@ -1,19 +1,21 @@
-const fs = require("fs");
-const configTemplate = require("./templates/xerc20.json");
+const XERC_TEMPLATE_PATH = "./templates/xerc20.json";
 
 let factoryAddress;
 
-task("deploy-xerc20", "")
-  .addParam("execute", "whether deploy contracts or not (1/0)")
+task("deploy-xerc20", "it deploys the set of XERC20 contracts")
+  .addParam("execute", "whether deploy contracts or not (1 / 0)")
   .setAction(async (taskArgs) => {
+    const { readJson } = require("../scripts/utils");
+
     const execute = taskArgs["execute"];
 
     const factoryPath = `./config/addresses/factory/${network.name}.json`;
-    factoryAddress = (await readConfig(factoryPath)).factoryAddress;
+    factoryAddress = (await readJson(factoryPath)).factoryAddress;
     if (factoryAddress.toString() == "") {
       console.error("factory address is null");
     }
 
+    const configTemplate = await readJson(XERC_TEMPLATE_PATH);
     const deployData = await generateCalldata(configTemplate);
     if (execute == "0") {
       console.log(deployData);
@@ -73,15 +75,3 @@ const generateCalldata = async (configFile) => {
     tokenSymbol: configFile.tokenSymbol,
   };
 };
-
-function readConfig(dirPath) {
-  try {
-    const fileContent = fs.readFileSync(dirPath, "utf8");
-    const jsonData = JSON.parse(fileContent);
-    return jsonData;
-  } catch (error) {
-    console.error("Error reading JSON files:", error);
-  }
-
-  return "";
-}

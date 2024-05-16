@@ -1,13 +1,9 @@
-// const { network } = require("hardhat");
-
 const BRIDGE_TEMPLATE_PATH = "./tasks/templates/bridge.json";
 
-task("setup-bridge", "TODO").setAction(async (taskArgs) => {
-  const { readTemplate } = require("./utils");
+task("setup-bridge", "It sets the bridge allowances, destinations, supported tokens...").setAction(async () => {
+  const { readJson } = require("../scripts/utils");
   const { setupBridge } = require("../scripts/setup-bridge");
 
-  // get the bridge template
-  const bridgeConfig = await readTemplate(BRIDGE_TEMPLATE_PATH);
-  /// 2. deploy and initialize the Proxy(+ProxyAdmin)
+  const bridgeConfig = await readJson(BRIDGE_TEMPLATE_PATH);
   await setupBridge(bridgeConfig);
 });
