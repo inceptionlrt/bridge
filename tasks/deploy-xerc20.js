@@ -1,5 +1,5 @@
 const fs = require("fs");
-const configTemplate = require("./templates/deploy_template.json");
+const configTemplate = require("./templates/xerc20.json");
 
 let factoryAddress;
 

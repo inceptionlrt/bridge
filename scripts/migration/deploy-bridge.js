@@ -1,9 +1,9 @@
 const fs = require("fs");
 const { ethers, network } = require("hardhat");
-const { printBalance } = require("../utils");
-const eth = require("ethereumjs-util");
-const rlp = require("rlp");
-const Web3 = require("web3");
+const { printBalance, readJson } = require("../utils");
+// const eth = require("ethereumjs-util");
+// const rlp = require("rlp");
+// const Web3 = require("web3");
 const abiCoder = require("web3-eth-abi");
 
 /** @var web3 {Web3} */
@@ -16,54 +16,42 @@ async function bridgeInit(initialOwner, operatorAddress) {
   return methodId + params.substr(2);
 }
 
-function readConfig(dirPath) {
-  try {
-    const fileContent = fs.readFileSync(dirPath, "utf8");
-    const jsonData = JSON.parse(fileContent);
-    return jsonData;
-  } catch (error) {
-    console.error("Error reading JSON files:", error);
-  }
+/***************************************************
+ ************ Implementation Deployment ************
+ ***************************************************/
 
-  return "";
+async function deployBridgeImpl() {
+  [deployer] = await ethers.getSigners();
+  await printBalance(deployer);
+
+  const bridgeImplFactory = await ethers.deployContract("InceptionBridge");
+  await bridgeImplFactory.waitForDeployment();
+
+  const bridgeImplAddress = await bridgeImplFactory.getAddress();
+  console.log(`Bridge Impl address: ${bridgeImplAddress}`);
+
+  return bridgeImplAddress;
 }
 
-/*******************************************
- ************ Bridge Deployment ************
- *******************************************/
+/******************************************
+ ************ Proxy Deployment ************
+ ******************************************/
 
-async function deployBridge(bridgeTokens, bridgesToAdd) {
-  const [deployer] = await ethers.getSigners();
-  printBalance(deployer);
-
-  /// 1. get the implementation from config/addresses
-  const bridgePath = `./config/addresses/bridges/${network.name}.json`;
-  console.log("bridgePath: ", bridgePath);
-  const bridgeAddresses = readConfig(bridgePath.toString());
-  console.log(bridgeAddresses);
-  const implementationAddress = bridgeAddresses.bridgeImplAddress;
+async function deployBridge(implementationAddress, factoryAddress) {
   if (implementationAddress == "") {
     console.error("implementation address is null");
   }
-
-  /// 2. get the Factory address from config/addresses
-  const factoryPath = `./config/addresses/factory/${network.name}.json`;
-  const factoryAddress = (await readConfig(factoryPath)).factoryAddress;
   if (factoryAddress == "") {
     console.error("factory address is null");
   }
 
+  /// Init Factory
   const factory = await ethers.getContractAt("BridgeFactory", factoryAddress);
-
-  /******************************************
-   ************ Proxy Deployment ************
-   ******************************************/
 
   /// Deploy ProxyAdmin
   const proxyAdmin = await ethers.deployContract("ProxyAdmin");
   await proxyAdmin.waitForDeployment();
   const proxyAdminAddress = await proxyAdmin.getAddress();
-
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   /// Deploy TransparentUpgradeableProxy
@@ -80,14 +68,30 @@ async function deployBridge(bridgeTokens, bridgesToAdd) {
   const bridgeProxy = ProxyFactory.attach(proxyAddress);
   tx = await bridgeProxy.initialize(implementationAddress, proxyAdminAddress, calldata);
   await tx.wait();
+
+  return proxyAddress;
 }
 
-module.exports = {
-  deployBridge,
-};
-
 async function main() {
-  await deployBridge();
+  /// 2. get the Factory address from config/addresses
+  const factoryPath = `./config/addresses/factory/${network.name}.json`;
+  const factoryAddress = (await readJson(factoryPath)).factoryAddress;
+  if (factoryAddress == "") {
+    console.error("factory address is null");
+  }
+
+  const bridgeImplAddress = await deployBridgeImpl();
+  const bridgeProxyAddress = await deployBridge();
+
+  // Save the Bridge Impl address
+  const bridgeAddresses = {
+    proxy: bridgeProxyAddress,
+    bridgeImplAddress: bridgeImplAddress,
+  };
+
+  const json_addresses = JSON.stringify(bridgeAddresses);
+  console.log(json_addresses);
+  fs.writeFileSync(`./config/addresses/bridges/${network.name}.json`, json_addresses);
 }
 
 main()

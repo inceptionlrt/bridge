@@ -19,7 +19,7 @@ async function setupBridge(bridgeConfig) {
   console.log("############################################################\n");
 
   for (let i = 0; i < bridgesToAdd.length; i++) {
-    console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID}\n\n`);
+    console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID}\n`);
     tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
     await tx.wait();
   }

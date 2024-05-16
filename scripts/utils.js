@@ -1,28 +1,25 @@
 const fs = require("fs").promises;
-const path = require("path");
-const hre = require("hardhat");
+// const path = require("path");
+// const hre = require("hardhat");
 
 async function printBalance(account) {
   const initBalance = await account.provider.getBalance(account.address);
   console.log(`Account(${account.address}) balance: ${initBalance.toString()}`);
 }
 
-/// TODO
-async function alreadyDeployed(network, contract, vaultName) {
-  let path = "";
-  switch (contract) {
-    case "XERC20":
-      path = `./config/addresses/${contract}/${network.name}_${vaultName}.json`;
-      return;
-    case "XERC20LockBox":
-      path = `./config/addresses/${contract}/${network.name}_${vaultName}.json`;
-      return;
+async function readJson(dirPath) {
+  try {
+    const fileContent = await fs.readFile(dirPath, "utf8");
+    const jsonData = JSON.parse(fileContent);
+    return jsonData;
+  } catch (error) {
+    console.error("Error reading JSON files:", error);
   }
-  // check whether the file already exists by the generated path
-  console.log("alreadyDeployed path:", path);
+
+  return "";
 }
 
 module.exports = {
   printBalance,
-  alreadyDeployed,
+  readJson,
 };
