@@ -78,6 +78,18 @@ module.exports = {
       chainId: 59141,
       gas: 8000000,
     },
+    blast: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+      url: `${process.env.RPC_URL_BLAST}`,
+      chainId: 81457,
+      gas: 8000000,
+    },
+    blast_testnet: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
+      url: `${process.env.RPC_URL_BLAST_TESTNET}`,
+      chainId: 168587773,
+      gas: 8000000,
+    },
   },
   solidity: {
     compilers: [
