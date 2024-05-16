@@ -1,3 +1,4 @@
+const config = require("dotenv").config();
 const fs = require("fs");
 const { ethers, network } = require("hardhat");
 const { printBalance, readJson } = require("../utils");
@@ -21,9 +22,6 @@ async function bridgeInit(initialOwner, operatorAddress) {
  ***************************************************/
 
 async function deployBridgeImpl() {
-  [deployer] = await ethers.getSigners();
-  await printBalance(deployer);
-
   const bridgeImplFactory = await ethers.deployContract("InceptionBridge");
   await bridgeImplFactory.waitForDeployment();
 
@@ -37,7 +35,7 @@ async function deployBridgeImpl() {
  ************ Proxy Deployment ************
  ******************************************/
 
-async function deployBridge(implementationAddress, factoryAddress) {
+async function deployBridge(implementationAddress, factoryAddress, notaryAddress) {
   if (implementationAddress == "") {
     console.error("implementation address is null");
   }
@@ -63,7 +61,7 @@ async function deployBridge(implementationAddress, factoryAddress) {
   tx = await factory.deployCreate2(proxyBytecode);
   await tx.wait();
 
-  const calldata = await bridgeInit(await deployer.getAddress(), "");
+  const calldata = await bridgeInit(await deployer.getAddress(), notaryAddress);
 
   const bridgeProxy = ProxyFactory.attach(proxyAddress);
   tx = await bridgeProxy.initialize(implementationAddress, proxyAdminAddress, calldata);
@@ -73,6 +71,14 @@ async function deployBridge(implementationAddress, factoryAddress) {
 }
 
 async function main() {
+  const notaryAddress = config.parsed.NOTARY_ADDRESS;
+  if (notaryAddress == "") {
+    console.error("notary address is null");
+  }
+
+  [deployer] = await ethers.getSigners();
+  await printBalance(deployer);
+
   /// 2. get the Factory address from config/addresses
   const factoryPath = `./config/addresses/factory/${network.name}.json`;
   const factoryAddress = (await readJson(factoryPath)).factoryAddress;
@@ -81,7 +87,7 @@ async function main() {
   }
 
   const bridgeImplAddress = await deployBridgeImpl();
-  const bridgeProxyAddress = await deployBridge();
+  const bridgeProxyAddress = await deployBridge(bridgeImplAddress, factoryAddress, notaryAddress);
 
   // Save the Bridge Impl address
   const bridgeAddresses = {
@@ -90,7 +96,6 @@ async function main() {
   };
 
   const json_addresses = JSON.stringify(bridgeAddresses);
-  console.log(json_addresses);
   fs.writeFileSync(`./config/addresses/bridges/${network.name}.json`, json_addresses);
 }
 

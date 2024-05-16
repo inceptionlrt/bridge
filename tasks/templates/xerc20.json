@@ -1,5 +1,6 @@
 {
   "tokenName": "InceptionLRT restaked ETH",
   "tokenSymbol": "inETH",
-  "originTokenAddress": ""
+  "mintingAllowances": "1000000000000000000000",
+  "burningAllowances": "1000000000000000000000"
 }
