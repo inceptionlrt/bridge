@@ -90,6 +90,18 @@ module.exports = {
       chainId: 168587773,
       gas: 8000000,
     },
+    bsc: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+      url: `${process.env.RPC_URL_BSC}`,
+      chainId: 56,
+      gas: 8000000,
+    },
+    bsc_testnet: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
+      url: `${process.env.RPC_URL_BSC_TESTNET}`,
+      chainId: 97,
+      gas: 8000000,
+    },
   },
   solidity: {
     compilers: [

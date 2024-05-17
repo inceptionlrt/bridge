@@ -19,13 +19,17 @@ async function setupBridge(bridgeConfig) {
   console.log("############################################################\n");
 
   for (let i = 0; i < bridgesToAdd.length; i++) {
-    console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID}\n\n`);
-    tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
-    await tx.wait();
+    try {
+      tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
+      await tx.wait();
+      console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID} was added\n`);
+    } catch (e) {
+      console.warn(`the bridge ${bridgesToAdd[i].address} to ${bridgesToAdd[i].destinationChainID} was skipped`);
+    }
   }
 
   if (tokenToAdd.length > 0) {
-    console.log("#########################################################");
+    console.log("\n#########################################################");
     console.log("################ Set up supported tokens ################");
     console.log("#########################################################\n");
 
@@ -35,16 +39,28 @@ async function setupBridge(bridgeConfig) {
         `originalTokenAddress(${originalTokenAddress})\ntoToken: chainID(${tokenToAdd[i].destinationChainID}); address(${tokenToAdd[i].destinationAddress})`
       );
 
-      tx = await bridge.addDestination(originalTokenAddress, tokenToAdd[i].destinationChainID, tokenToAdd[i].destinationAddress);
-      await tx.wait();
+      const destination = (await bridge.getDestination(originalTokenAddress, tokenToAdd[i].destinationChainID)).toString();
+      if (destination == "0x0000000000000000000000000000000000000000") {
+        tx = await bridge.addDestination(originalTokenAddress, tokenToAdd[i].destinationChainID, tokenToAdd[i].destinationAddress);
+        await tx.wait();
+      }
 
-      console.log(`shortCap: ${tokenToAdd[i].shortCap}; longCap: ${tokenToAdd[i].longCap}`);
-      tx = await bridge.setShortCap(originalTokenAddress, tokenToAdd[i].shortCap);
-      await tx.wait();
-      tx = await bridge.setLongCap(originalTokenAddress, tokenToAdd[i].longCap);
-      await tx.wait();
+      const currentShortCap = (await bridge.shortCaps(originalTokenAddress)).toString();
+      const currentLongCap = (await bridge.longCaps(originalTokenAddress)).toString();
 
-      console.log(`token(${originalTokenAddress}) was added into the bridge`);
+      console.log(`new caps short: ${tokenToAdd[i].shortCap}; long: ${tokenToAdd[i].longCap}`);
+      console.log(`curr caps short: ${currentShortCap}; long: ${currentLongCap}`);
+
+      if (currentShortCap == "0") {
+        tx = await bridge.setShortCap(originalTokenAddress, tokenToAdd[i].shortCap);
+        await tx.wait();
+      }
+      if (currentLongCap == "0") {
+        tx = await bridge.setLongCap(originalTokenAddress, tokenToAdd[i].longCap);
+        await tx.wait();
+      }
+
+      console.log(`token(${originalTokenAddress}) was added into the bridge\n\n`);
     }
   }
 

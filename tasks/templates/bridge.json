@@ -1,16 +1,67 @@
 {
-  "17000": {
-    "bridgeAddress": "0xCDeA808c1C43F95309C8ca398DF41a257aF2Dc8a",
+  "97": {
+    "bridgeAddress": "0x983c2239ad08307F978096844166c67E0f1b2630",
     "bridgesToAdd": [
       {
-        "destinationChainID": "59141",
+        "destinationChainID": "17000",
+        "address": "0xCDeA808c1C43F95309C8ca398DF41a257aF2Dc8a"
+      },
+      {
+        "destinationChainID": "168587773",
+        "address": "0xCDeA808c1C43F95309C8ca398DF41a257aF2Dc8a"
+      },
+      {
+        "destinationChainID": "421614",
         "address": "0xCDeA808c1C43F95309C8ca398DF41a257aF2Dc8a"
       }
     ],
     "tokens": [
       {
+        "fromToken": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
+        "destinationChainID": "17000",
+        "destinationAddress": "0x76944d54c9eF0a7A563E43226e998F382714C92f",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
+      },
+      {
+        "fromToken": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
+        "destinationChainID": "168587773",
+        "destinationAddress": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
+      },
+      {
+        "fromToken": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
+        "destinationChainID": "421614",
+        "destinationAddress": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
+      }
+    ]
+  },
+  "17000": {
+    "bridgeAddress": "0xCDeA808c1C43F95309C8ca398DF41a257aF2Dc8a",
+    "bridgesToAdd": [
+      {
+        "destinationChainID": "97",
+        "address": "0x983c2239ad08307F978096844166c67E0f1b2630"
+      },
+      {
+        "destinationChainID": "168587773",
+        "address": "0x983c2239ad08307F978096844166c67E0f1b2630"
+      }
+    ],
+    "tokens": [
+      {
         "fromToken": "0x76944d54c9eF0a7A563E43226e998F382714C92f",
-        "destinationChainID": "59141",
+        "destinationChainID": "97",
+        "destinationAddress": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
+      },
+      {
+        "fromToken": "0x76944d54c9eF0a7A563E43226e998F382714C92f",
+        "destinationChainID": "168587773",
         "destinationAddress": "0xb1692ed9b08f8dd641f4109568ed6f471166c7e5",
         "shortCap": "10000000000000000000",
         "longCap": "1000000000000000000000"
