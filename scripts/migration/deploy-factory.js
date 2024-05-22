@@ -2,8 +2,8 @@ const fs = require("fs");
 const { ethers } = require("hardhat");
 const { printBalance } = require("../utils");
 
-const DEPLOYER_ADDRESS = "";
-const DEPLOYER_NONCE = "";
+const DEPLOYER_ADDRESS = "0x1a8a27A5AD3dE62719e65eEC79507218bF951E28";
+const DEPLOYER_NONCE = "0";
 
 const deployFactory = async () => {
   console.log("##################################################################");
