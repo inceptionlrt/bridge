@@ -102,6 +102,18 @@ module.exports = {
       chainId: 97,
       gas: 8000000,
     },
+    optimism: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+      url: `${process.env.RPC_URL_OPTIMISM}`,
+      chainId: 10,
+      gas: 8000000,
+    },
+    optimism_testnet: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
+      url: `${process.env.RPC_URL_OPTIMISM_TESTNET}`,
+      chainId: 11155420,
+      gas: 8000000,
+    },
   },
   solidity: {
     compilers: [
