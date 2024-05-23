@@ -204,7 +204,7 @@
       },
       {
         "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "56",
+        "destinationChainID": "42161",
         "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
         "shortCap": "50000000000000000000",
         "longCap": "120000000000000000000"
