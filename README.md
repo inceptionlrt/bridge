@@ -17,7 +17,7 @@ The Inception Bridge provides trustworthy and fast cross-chain asset transfers.
 3. **Deploy Bridge.** This step involves two deployments, particularly the bridge's implementation deployment and the bridge's proxy deployment, followed by further initialization.
 
    ```
-   npx hardhat run ./scripts/migration/deploy-impl.js --network {network}
+   npx hardhat run ./scripts/migration/deploy-bridge.js --network {network}
    ```
 
 4. **Deploy the set of XERC20 contracts.** Additionally, it sets the bridge's minting/burning limits.
