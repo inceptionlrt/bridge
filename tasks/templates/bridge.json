@@ -1,373 +1,105 @@
 {
-  "42161": {
-    "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "1",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "59144",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "34443",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "81457",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
-    "tokens": [
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "1",
-        "destinationAddress": "0xf073bAC22DAb7FaF4a3Dd6c6189a70D54110525C",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "59144",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "34443",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "81457",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "56",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "10",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      }
-    ]
-  },
   "10": {
     "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "1",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "59144",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "34443",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "81457",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
     "tokens": [
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
+        "fromToken": "XXXXX",
         "destinationChainID": "1",
-        "destinationAddress": "0xf073bAC22DAb7FaF4a3Dd6c6189a70D54110525C",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "0x7FA768E035F956c41d6aeaa3Bd857e7E5141CAd5",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       },
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
+        "fromToken": "XXXXX",
+        "destinationChainID": "42161",
+        "destinationAddress": "XXXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
+      },
+      {
+        "fromToken": "XXXXX",
         "destinationChainID": "59144",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "34443",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "81457",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "42161",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      }
-    ]
-  },
-  "56": {
-    "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "1",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "59144",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "34443",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "81457",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
-    "tokens": [
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "1",
-        "destinationAddress": "0xf073bAC22DAb7FaF4a3Dd6c6189a70D54110525C",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "59144",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "34443",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "81457",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "10",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "42161",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      }
-    ]
-  },
-  "81457": {
-    "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
-    "tokens": [
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "56",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "10",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "42161",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "XXXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       }
     ]
   },
   "1": {
     "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
     "tokens": [
       {
-        "fromToken": "0xf073bAC22DAb7FaF4a3Dd6c6189a70D54110525C",
-        "destinationChainID": "56",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
-      },
-      {
-        "fromToken": "0xf073bAC22DAb7FaF4a3Dd6c6189a70D54110525C",
+        "fromToken": "0x7FA768E035F956c41d6aeaa3Bd857e7E5141CAd5",
         "destinationChainID": "10",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "0x0317b2bB01E2f28857448B5505EEaB11eDEA4781",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       },
       {
-        "fromToken": "0xf073bAC22DAb7FaF4a3Dd6c6189a70D54110525C",
+        "fromToken": "0x7FA768E035F956c41d6aeaa3Bd857e7E5141CAd5",
         "destinationChainID": "42161",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "XXXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
+      },
+      {
+        "fromToken": "0x7FA768E035F956c41d6aeaa3Bd857e7E5141CAd5",
+        "destinationChainID": "59144",
+        "destinationAddress": "0x0317b2bB01E2f28857448B5505EEaB11eDEA4781",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       }
     ]
   },
-  "34443": {
+  "42161": {
     "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
     "tokens": [
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "56",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "fromToken": "XXXXX",
+        "destinationChainID": "1",
+        "destinationAddress": "0x7FA768E035F956c41d6aeaa3Bd857e7E5141CAd5",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       },
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
+        "fromToken": "XXXX",
         "destinationChainID": "10",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "XXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       },
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "42161",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "fromToken": "XXXXX",
+        "destinationChainID": "59144",
+        "destinationAddress": "XXXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       }
     ]
   },
   "59144": {
     "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
-    "bridgesToAdd": [
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      }
-    ],
     "tokens": [
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "destinationChainID": "56",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "fromToken": "XXXXXX",
+        "destinationChainID": "1",
+        "destinationAddress": "0x7FA768E035F956c41d6aeaa3Bd857e7E5141CAd5",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       },
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
+        "fromToken": "XXXXX",
         "destinationChainID": "10",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "XXXXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       },
       {
-        "fromToken": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
+        "fromToken": "XXXXXX",
         "destinationChainID": "42161",
-        "destinationAddress": "0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d",
-        "shortCap": "50000000000000000000",
-        "longCap": "120000000000000000000"
+        "destinationAddress": "XXXXXX",
+        "shortCap": "10000000000000000000",
+        "longCap": "1000000000000000000000"
       }
     ]
   }
