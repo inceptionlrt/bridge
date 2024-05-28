@@ -1,8 +1,5 @@
 /** @var web3 {Web3} */
-const eth = require("ethereumjs-util");
-const rlp = require("rlp");
 const Web3 = require("web3");
-const abiCoder = require("web3-eth-abi");
 
 function signMessageUsingPrivateKey(privateKey, data) {
   const { ec: EC } = require("elliptic"),
@@ -23,43 +20,15 @@ function signMessageUsingPrivateKey(privateKey, data) {
   );
 }
 
-async function advanceTime(time) {
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [time],
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      }
-    );
+const advanceTime = async (time) => {
+  await network.provider.request({
+    method: "evm_increaseTime",
+    params: [time],
   });
-}
+};
 
 async function advanceBlock() {
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_mine",
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        const newBlockHash = web3.eth.getBlock("latest").hash;
-
-        return resolve(newBlockHash);
-      }
-    );
-  });
+  await network.provider.send("evm_mine");
 }
 
 async function advanceBlocks(count) {
@@ -86,58 +55,10 @@ async function takeSnapshot() {
   });
 }
 
-async function revertToSnapshot(id) {
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_revert",
-        params: [id],
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      }
-    );
-  });
-}
-
 async function advanceTimeAndBlock(time) {
   await advanceTime(time);
   await advanceBlock();
-  return Promise.resolve(web3.eth.getBlock("latest"));
 }
-
-function makeHex(data) {
-  return web3.utils.padRight(web3.utils.asciiToHex(data), 64);
-}
-
-function computeCreate2Address(deployer, salt, bytecode) {
-  const byteCodeHash = eth.keccak256(eth.toBuffer(bytecode));
-  const address = eth.keccak256(eth.toBuffer(["0xff", deployer, web3.utils.padRight(salt, 64), byteCodeHash.toString("hex")].join("")));
-  return `0x${address.toString("hex").substr(24)}`;
-}
-
-function computeContractAddress(deployer, nonce) {
-  const address = eth.keccak256(eth.rlp.encode([deployer, nonce]));
-  return `0x${address.toString("hex").substr(24)}`;
-}
-
-const expectError = async (promise, text) => {
-  try {
-    await promise;
-  } catch (e) {
-    if (text === undefined || e.message.includes(text)) {
-      return;
-    }
-    console.error(new Error(`Unexpected error: ${e.message}`));
-  }
-  console.error(new Error(`Expected error: ${text}`));
-  assert.fail();
-};
 
 module.exports = {
   signMessageUsingPrivateKey,
@@ -146,9 +67,4 @@ module.exports = {
   advanceBlocks,
   advanceTimeAndBlock,
   takeSnapshot,
-  revertToSnapshot,
-  makeHex,
-  computeCreate2Address,
-  computeContractAddress,
-  expectError,
 };
