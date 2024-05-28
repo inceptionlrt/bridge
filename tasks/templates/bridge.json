@@ -3,21 +3,21 @@
     "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
     "tokens": [
       {
-        "fromToken": "0xDA9B11Cd701e10C2Ec1a284f80820eDD128c5246",
-        "destinationChainID": "56",
+        "fromToken": "0xfa2629B9cF3998D52726994E0FcdB750224D8B9D",
+        "destinationChainID": "34443",
         "destinationAddress": "XXXXX",
         "shortCap": "50000000000000000000",
         "longCap": "120000000000000000000"
       }
     ]
   },
-  "56": {
+  "42161": {
     "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
     "tokens": [
       {
         "fromToken": "XXXXX",
         "destinationChainID": "1",
-        "destinationAddress": "0xDA9B11Cd701e10C2Ec1a284f80820eDD128c5246",
+        "destinationAddress": "0xfa2629B9cF3998D52726994E0FcdB750224D8B9D",
         "shortCap": "50000000000000000000",
         "longCap": "120000000000000000000"
       }
