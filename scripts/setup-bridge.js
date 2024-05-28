@@ -18,13 +18,15 @@ async function setupBridge(bridgeConfig) {
   console.log("################ Set up destination bridges ################");
   console.log("############################################################\n");
 
-  for (let i = 0; i < bridgesToAdd.length; i++) {
-    try {
-      tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
-      await tx.wait();
-      console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID} was added\n`);
-    } catch (e) {
-      console.warn(`the bridge ${bridgesToAdd[i].address} to ${bridgesToAdd[i].destinationChainID} was skipped`);
+  if (bridgesToAdd !== undefined) {
+    for (let i = 0; i < bridgesToAdd.length; i++) {
+      try {
+        tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
+        await tx.wait();
+        console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID} was added\n`);
+      } catch (e) {
+        console.warn(`the bridge ${bridgesToAdd[i].address} to ${bridgesToAdd[i].destinationChainID} was skipped`);
+      }
     }
   }
 
