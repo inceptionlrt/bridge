@@ -3,6 +3,7 @@ const rlp = require("rlp");
 const Web3 = require("web3");
 const abiCoder = require("web3-eth-abi");
 const { ethers } = require("hardhat");
+const { ec: EC } = require("elliptic");
 
 /** @var web3 {Web3} */
 
@@ -119,17 +120,23 @@ function encodeProof(chainId, status, txHash, blockNumber, blockHash, txIndex, r
   return [`0x${proofData.toString("hex")}`, `0x${eth.keccak256(proofData).toString("hex")}`];
 }
 
-function randBigInt(length) {
-  if (length > 0) {
-    let randomNum = "";
-    randomNum += Math.floor(Math.random() * 9) + 1; // generates a random digit 1-9
-    for (let i = 0; i < length - 1; i++) {
-      randomNum += Math.floor(Math.random() * 10); // generates a random digit 0-9
-    }
-    return BigInt(randomNum);
-  } else {
-    return 0n;
+function signMessageUsingPrivateKey(privateKey, data) {
+  const { ec: EC } = require("elliptic"),
+    ec = new EC("secp256k1");
+  let keyPair = ec.keyFromPrivate(privateKey);
+  // console.log(keyPair.getPrivate());
+  let res = keyPair.sign(data.substring(2));
+  const N_DIV_2 = Web3.utils.toBN("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0", 16);
+  const secp256k1N = Web3.utils.toBN("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
+  let v = res.recoveryParam;
+  let s = res.s;
+  if (s.cmp(N_DIV_2) > 0) {
+    s = secp256k1N.sub(s);
+    v = v === 0 ? 1 : 0;
   }
+  return (
+    "0x" + Buffer.concat([res.r.toArrayLike(Buffer, "be", 32), s.toArrayLike(Buffer, "be", 32)]).toString("hex") + (v === 0 ? "1b" : "1c")
+  );
 }
 
 module.exports = {
@@ -138,5 +145,5 @@ module.exports = {
   encodeTransactionReceiptInvalidFromTokenAddress,
   encodeTransactionReceipt,
   encodeProof,
-  randBigInt,
+  signMessageUsingPrivateKey,
 };
