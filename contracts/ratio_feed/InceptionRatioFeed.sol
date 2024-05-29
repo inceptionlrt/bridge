@@ -142,7 +142,7 @@ contract InceptionRatioFeed is
 
         return
             ((oldestRatio - newestRatio) * 10 ** 20 * 365) /
-            (oldestRatio * (day));
+            (newestRatio * (day));
     }
 
     function getRatioFor(
