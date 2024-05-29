@@ -258,10 +258,32 @@ describe("InceptionRatioFeed", function () {
       })
     })
 
-    //TODO: finish
     describe("setInceptionOperator", function () {
-      before(async function () {
+      beforeEach(async function () {
         await snapshot.restore();
+      })
+
+      it("setInceptionOperator", async function() {
+        const prevValue = await ratioFeed.inceptionOperator();
+        const newValue = ethers.Wallet.createRandom().address;
+
+        await expect(ratioFeed.setInceptionOperator(newValue))
+          .to.emit(ratioFeed, "OperatorUpdated")
+          .withArgs(prevValue, newValue);
+        expect(await ratioFeed.inceptionOperator()).to.be.eq(newValue);
+      })
+
+      it("setInceptionOperator only owner can", async function() {
+        const newValue = ethers.Wallet.createRandom().address;
+        await expect(ratioFeed.connect(signer1).setInceptionOperator(newValue))
+          .to.revertedWithCustomError(ratioFeed, "OwnableUnauthorizedAccount")
+          .withArgs(signer1.address);
+      })
+
+      it("setInceptionOperator reverts when changes to 0x address", async function() {
+        const newValue = ethers.ZeroAddress;
+        await expect(ratioFeed.connect(owner).setInceptionOperator(newValue))
+          .to.revertedWithCustomError(ratioFeed, "NullParams");
       })
     })
   })
@@ -490,7 +512,7 @@ describe("InceptionRatioFeed", function () {
 
     it("Fill ratio history", async () => {
       let latestOffset = historicalRatios[0]
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 8n; i++) {
         console.log(`i: ${i}`);
         // add 1 day
         await advanceTime(day);
@@ -499,7 +521,6 @@ describe("InceptionRatioFeed", function () {
         console.log(`ratio before: ${await ratioFeed.getRatioFor(token1.address)}`);
         await ratioFeed.connect(operator).updateRatioBatch([token1.address], [ratio]);
         console.log(`ratio after: ${await ratioFeed.getRatioFor(token1.address)}`);
-        console.log(`historical data ${await ratioFeed.averagePercentageRate(token1.address, (i)%7+1)}`);
         // update history rate array
         historicalRatios[latestOffset % 8n + 1n] = ratio;
         // increment offset
@@ -516,7 +537,7 @@ describe("InceptionRatioFeed", function () {
         const newestRatio = historicalRatios[(latestOffset + 7n) % 8n + 1n];
 
         let averageRate = await ratioFeed.averagePercentageRate(token1.address, day);
-        let expectedRate = (oldestRatio - newestRatio) * (100n * e18) * 365n / (oldestRatio * day);
+        let expectedRate = (oldestRatio - newestRatio) * (100n * e18) * 365n / (newestRatio * day);
         console.log(`Average ratio: ${averageRate}`);
         expect(averageRate).to.be.eq(expectedRate);
       });
@@ -535,8 +556,103 @@ describe("InceptionRatioFeed", function () {
     });
 
     it('averagePercentageRate(): when there is no data', async () => {
-      console.log(await ratioFeed.averagePercentageRate(ethers.Wallet.createRandom().address, 1n));
+      const token = ethers.Wallet.createRandom().address;
+      await expect(ratioFeed.averagePercentageRate(token, 1n))
+        .to.revertedWithCustomError(ratioFeed, "IncorrectToken")
+        .withArgs(token);
     });
+
+    it("getRatioFor unknown token", async function() {
+      expect(await ratioFeed.getRatioFor(ethers.Wallet.createRandom().address)).to.be.eq(0n);
+    })
+  })
+
+  describe("Repair ratio", function() {
+    let MAX_THRESHOLD;
+    beforeEach(async function () {
+      await snapshot.restore();
+      MAX_THRESHOLD = await ratioFeed.MAX_THRESHOLD();
+      await ratioFeed.setRatioThreshold(1_000_000n)
+    });
+
+    const invalidRatios = [
+      {
+        name: "out of threshold",
+        fromRatio: () => e18,
+        toRatio: () => toWei(0.99) - 1n,
+        timeWait: 12*3600,
+      },
+      {
+        name: "new ratio is greater than prior",
+        fromRatio: () => toWei(0.99),
+        toRatio: () => toWei(0.99) + 1n,
+        timeWait: 12*3600,
+      },
+      {
+        name: "less than 12h have passed since last update",
+        fromRatio: () => e18,
+        toRatio: () => toWei(0.99),
+        timeWait: 3600,
+      },
+    ]
+
+    invalidRatios.forEach(function(arg) {
+      it(`Repair ratio when: ${arg.name}`, async function(){
+        await ratioFeed.connect(operator).updateRatioBatch([token1.address], [arg.fromRatio()]);
+        await advanceTime(arg.timeWait);
+
+        await expect(ratioFeed.connect(owner).repairRatioFor(token1.address, arg.toRatio()))
+          .to.emit(ratioFeed, "RatioUpdated")
+          .withArgs(token1.address, arg.fromRatio(), arg.toRatio());
+
+        expect(await ratioFeed.getRatioFor(token1.address)).to.be.eq(arg.toRatio());
+      })
+    })
+
+    it("update ratio after repair", async function() {
+      await ratioFeed.connect(operator).updateRatioBatch([token1.address], [toWei(0.9)]);
+      await ratioFeed.connect(owner).repairRatioFor(token1.address, e18);
+
+      let ratio = e18;
+      const step = 1000_000_000_000_000n;
+      let historicalRatios = [0n, e18];
+      const day = 86400n;
+      let latestOffset = historicalRatios[0]
+      for (let i = 0; i < 8; i++) {
+        console.log(`i: ${i}`);
+        // add 1 day
+        await advanceTime(day);
+        // update ratio
+        ratio = ratio - step;
+        console.log(`ratio before: ${await ratioFeed.getRatioFor(token1.address)}`);
+        await ratioFeed.connect(operator).updateRatioBatch([token1.address], [ratio]);
+        console.log(`ratio after: ${await ratioFeed.getRatioFor(token1.address)}`);
+        // update history rate array
+        historicalRatios[latestOffset % 8n + 1n] = ratio;
+        // increment offset
+        latestOffset = latestOffset + 1n
+        historicalRatios[0] = latestOffset;
+      }
+    })
+
+    it("repairRatioFor only owner can", async function() {
+      await ratioFeed.connect(operator).updateRatioBatch([token1.address], [e18]);
+      await expect(ratioFeed.connect(signer1).repairRatioFor(token1.address, e18))
+        .to.revertedWithCustomError(ratioFeed, "OwnableUnauthorizedAccount")
+        .withArgs(signer1.address);
+    })
+
+    it("repairRatioFor reverts when changes for 0x address", async function() {
+      await expect(ratioFeed.connect(owner).repairRatioFor(ethers.ZeroAddress, e18))
+        .to.revertedWithCustomError(ratioFeed, "NullParams");
+    })
+
+    it("repairRatioFor reverts when changes to 0", async function() {
+      await ratioFeed.connect(operator).updateRatioBatch([token1.address], [e18]);
+      await expect(ratioFeed.connect(owner).repairRatioFor(token1.address, 0n))
+        .to.revertedWithCustomError(ratioFeed, "NullParams");
+    })
+
   })
 });
 

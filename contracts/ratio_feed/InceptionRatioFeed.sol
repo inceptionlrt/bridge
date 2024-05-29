@@ -130,15 +130,16 @@ contract InceptionRatioFeed is
         HistoricalRatios storage hisRatio = historicalRatios[token];
         uint64 latestOffset = hisRatio.historicalRatios[0];
         if (latestOffset == 0) revert IncorrectToken(token);
+        if (latestOffset < day) revert IncorrectDay(day);
 
         uint256 oldestRatio = hisRatio.historicalRatios[
             ((latestOffset - day) % 8) + 1
-        ];
+            ];
         uint256 newestRatio = hisRatio.historicalRatios[
             ((latestOffset) % 8) + 1
-        ];
+            ];
 
-        if (oldestRatio < newestRatio) {
+        if (oldestRatio <= newestRatio) {
             return 0;
         }
 
