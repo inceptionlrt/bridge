@@ -121,13 +121,15 @@ contract InceptionRatioFeed is
     }
 
     function averagePercentageRate(
-        address addr,
+        address token,
         uint256 day
     ) external view returns (uint256) {
+        if (token == address(0)) revert NullParams();
         if (day == 0 || day > 7) revert IncorrectDay(day);
 
-        HistoricalRatios storage hisRatio = historicalRatios[addr];
+        HistoricalRatios storage hisRatio = historicalRatios[token];
         uint64 latestOffset = hisRatio.historicalRatios[0];
+        if (latestOffset == 0) revert IncorrectToken(token);
 
         uint256 oldestRatio = hisRatio.historicalRatios[
             ((latestOffset - day) % 8) + 1

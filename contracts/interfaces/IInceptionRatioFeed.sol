@@ -13,6 +13,8 @@ interface IInceptionRatioFeedErrors {
     error NewRatioThresholdInvalid();
 
     error IncorrectDay(uint256 day);
+
+    error IncorrectToken(address token);
 }
 
 interface IInceptionRatioFeed {
