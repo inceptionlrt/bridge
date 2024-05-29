@@ -34,7 +34,7 @@ contract InceptionRatioFeed is
     uint256 public ratioThreshold;
 
     modifier onlyOperator() {
-        if (msg.sender != owner() || msg.sender != inceptionOperator)
+        if (msg.sender != owner() && msg.sender != inceptionOperator)
             revert OperatorUnauthorizedAccount(msg.sender);
         _;
     }
