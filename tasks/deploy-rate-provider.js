@@ -4,7 +4,6 @@ task("deploy-rate-provider", "Deploys a new RateProvider for an asset")
   .addParam("asset", "The name of the vault")
   .setAction(async (taskArgs) => {
     const assetName = taskArgs["asset"].toLowerCase();
-    console.log(`!!!!!asset: ${assetName}`);
     const networkName = network.name;
 
     const rateFactory = await getRateProviderFactory(assetName);
@@ -21,9 +20,7 @@ task("deploy-rate-provider", "Deploys a new RateProvider for an asset")
 
     const assetConfig = `./config/addresses/assets/${assetName.toLowerCase()}.json`;
     const assetAddresses = await readJson(assetConfig);
-    console.log(assetAddresses);
     const assetAddress = assetAddresses[networkName];
-    console.log(assetAddress);
     if (assetAddress == undefined || assetAddress.toString() == "") {
       console.error("asset address is null");
     }
