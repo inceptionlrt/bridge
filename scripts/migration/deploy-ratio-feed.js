@@ -3,7 +3,9 @@ const config = require("dotenv").config();
 const { ethers } = require("hardhat");
 const { printBalance } = require("../utils");
 
-const deployFactory = async () => {
+const INIT_THRESHOLD = "80000";
+
+const deployRatioFeed = async () => {
   console.log("###################################################################");
   console.log("###################### RatioFeed deployment #######################");
   console.log("###################################################################\n");
@@ -22,7 +24,10 @@ const deployFactory = async () => {
   const ratioFeedAddress = await ratioFeed.getAddress();
   console.log(`InceptionRatioFeed address: ${ratioFeedAddress}\n`);
 
-  // Save the Factory address
+  // set the init ratio threshold
+  await ratioFeed.setRatioThreshold(INIT_THRESHOLD);
+
+  // Save the RatioFeed address
   const ratioFeedConfig = {
     ratioFeedAddress: ratioFeedAddress,
   };
@@ -32,7 +37,7 @@ const deployFactory = async () => {
 };
 
 async function main() {
-  await deployFactory();
+  await deployRatioFeed();
 }
 
 main()

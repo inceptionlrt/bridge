@@ -39,7 +39,7 @@ contract InceptionRatioFeed is
         _;
     }
 
-    function initialize(address operator) public initializer {
+    function initialize(address operator) external initializer {
         __Ownable_init(msg.sender);
         __Pausable_init();
 
