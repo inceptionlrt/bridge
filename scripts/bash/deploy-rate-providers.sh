@@ -15,8 +15,8 @@ echo_reset_newline() {
 }
 
 # Define two parallel arrays
-assets=("inETH" "inBTC")
-networks=("localhost" "testnet")
+assets=("inETH" "inETH" "inETH" "instETH")
+networks=("arbitrum" "linea" "mode" "arbitrum")
 
 # Loop over each asset and its associated network in the deployment array
 # Loop through indices

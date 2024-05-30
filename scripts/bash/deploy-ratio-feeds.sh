@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # KEEP IT UP-TO-DATE
-networks=("localhost" "localhost")
+networks=("arbitrum" "linea" "blast" "mode")
 
 echo_green() {
     echo -ne "\033[32m$1\033[0m"

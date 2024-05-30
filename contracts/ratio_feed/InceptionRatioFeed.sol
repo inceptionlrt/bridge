@@ -6,8 +6,8 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "../interfaces/IInceptionRatioFeed.sol";
 
 /// @author The InceptionLRT team
-/// @title The InceptionRatioFeed contract
-/// @notice TODO
+/// @title InceptionRatioFeed Contract
+/// @notice Holds the up-to-date ratios for the bridged LRTs.
 contract InceptionRatioFeed is
     OwnableUpgradeable,
     PausableUpgradeable,
@@ -19,7 +19,7 @@ contract InceptionRatioFeed is
         uint40 lastUpdate;
     }
 
-    /// @dev // 100000000
+    /// @dev 100000000
     uint32 public constant MAX_THRESHOLD = uint32(1e8);
 
     address public inceptionOperator;
@@ -81,7 +81,7 @@ contract InceptionRatioFeed is
 
             _ratioUpdates[tokenAddr] = uint40(block.timestamp);
 
-            // let's compare with a new ratio
+            // let's compare with the new ratio
             HistoricalRatios storage hisRatio = historicalRatios[tokenAddr];
             if (block.timestamp - hisRatio.lastUpdate > 1 days - 1 minutes) {
                 uint64 latestOffset = hisRatio.historicalRatios[0];
@@ -134,10 +134,10 @@ contract InceptionRatioFeed is
 
         uint256 oldestRatio = hisRatio.historicalRatios[
             ((latestOffset - day) % 8) + 1
-            ];
+        ];
         uint256 newestRatio = hisRatio.historicalRatios[
             ((latestOffset) % 8) + 1
-            ];
+        ];
 
         if (oldestRatio <= newestRatio) {
             return 0;
