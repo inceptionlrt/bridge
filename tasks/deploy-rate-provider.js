@@ -1,32 +1,58 @@
-const addressesPath = "./scripts/migration/addresses";
-const { readJsonFiles } = require("./utils");
+const fs = require("fs");
 
-task("deploy-rate-provider", "Deploys a new RateProvider for a vault")
-  .addParam("vault", "The name of the vault")
+task("deploy-rate-provider", "Deploys a new RateProvider for an asset")
+  .addParam("asset", "The name of the vault")
   .setAction(async (taskArgs) => {
-    const inputVaultName = taskArgs["vault"];
-    const vaults = await readJsonFiles(addressesPath);
-    for (const [vaultName, vaultData] of vaults) {
-      if (vaultName == inputVaultName) {
-        const [factoryNameStr, vaultAddress] = await getRateProviderFactory(vaultName, vaultData);
-        await deployRateProvider(factoryNameStr, vaultAddress);
-      }
+    const assetName = taskArgs["asset"].toLowerCase();
+    console.log(`!!!!!asset: ${assetName}`);
+    const networkName = network.name;
+
+    const rateFactory = await getRateProviderFactory(assetName);
+    if (rateFactory == "") {
+      console.error("asset is not supported");
     }
+
+    const { readJson } = require("../scripts/utils");
+    const ratioFeedConfig = `./config/addresses/ratio_feeds/${networkName}.json`;
+    const ratioFeedAddress = (await readJson(ratioFeedConfig)).ratioFeedAddress;
+    if (ratioFeedAddress.toString() == "") {
+      console.error("ratioFeed address is null");
+    }
+
+    const assetConfig = `./config/addresses/assets/${assetName.toLowerCase()}.json`;
+    const assetAddresses = await readJson(assetConfig);
+    console.log(assetAddresses);
+    const assetAddress = assetAddresses[networkName];
+    console.log(assetAddress);
+    if (assetAddress == undefined || assetAddress.toString() == "") {
+      console.error("asset address is null");
+    }
+
+    await deployRateProvider(rateFactory, ratioFeedAddress, assetAddress);
   });
 
-const deployRateProvider = async (factoryNameStr, vaultAddress) => {
+const deployRateProvider = async (factoryNameStr, ratioFeedAddress, assetAddress) => {
   const RateProviderFactory = await hre.ethers.getContractFactory(factoryNameStr);
-  const rateProvider = await RateProviderFactory.deploy(vaultAddress);
+  const rateProvider = await RateProviderFactory.deploy(ratioFeedAddress, assetAddress, { maxFeePerGas: "4226077545" });
   await rateProvider.waitForDeployment();
 
-  console.log("RateProvider address: ", (await rateProvider.getAddress()).toString());
+  const rateProviderAddress = (await rateProvider.getAddress()).toString();
+  console.log(`RateProvider address: ${rateProviderAddress}`);
+
+  // Save the RateProvider address
+  const json_addresses = JSON.stringify({
+    rateProviderAddress: rateProviderAddress,
+  });
+  fs.writeFileSync(`./config/addresses/rate_providers/${network.name}.json`, json_addresses);
 };
 
 const getRateProviderFactory = async (asset) => {
-  let rateProviderFactory;
   switch (asset) {
+    case "ineth":
+      return "InETHRateProvider";
+    case "insteth":
+      return "InstETHRateProvider";
     default:
-      console.log("the asset is not supported");
+      return "";
   }
-  return rateProviderFactory;
 };
