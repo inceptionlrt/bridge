@@ -28,11 +28,9 @@ const deployRatioFeed = async () => {
   await ratioFeed.setRatioThreshold(INIT_THRESHOLD);
 
   // Save the RatioFeed address
-  const ratioFeedConfig = {
+  const json_addresses = JSON.stringify({
     ratioFeedAddress: ratioFeedAddress,
-  };
-
-  const json_addresses = JSON.stringify(ratioFeedConfig);
+  });
   fs.writeFileSync(`./config/addresses/ratio_feeds/${network.name}.json`, json_addresses);
 };
 
