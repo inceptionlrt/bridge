@@ -1,5 +1,4 @@
-const { ethers, upgrades, network } = require("hardhat");
-const { time, takeSnapshot } = require("@nomicfoundation/hardhat-network-helpers");
+const { ethers, upgrades } = require("hardhat");
 const { expect } = require("chai");
 const web3x = require("web3");
 const {
@@ -7,10 +6,14 @@ const {
   encodeTransactionReceiptInvalidContractAddress,
   encodeTransactionReceiptInvalidFromTokenAddress,
   encodeProof,
-  randBigInt,
+  signMessageUsingPrivateKey
 } = require("./helpers/bridge_utils");
-const { signMessageUsingPrivateKey } = require("./helpers/evm_utils");
-const { parseEther } = require("ethers");
+const {
+  advanceTime,
+  takeSnapshot,
+  toWei,
+  randBigInt
+} = require("./helpers/utils");
 
 // Constants
 const CHAIN_ID = "31337";
@@ -36,9 +39,9 @@ async function deployXERC20(factory, baseTokenAddress, baseTokenName, baseTokenS
   await bridge1.setXERC20Lockbox(baseTokenAddress, lockBoxAddress);
 
   let xerc20 = await ethers.getContractAt("XERC20", xERC20Address);
-  await xerc20.setBridgeLimits(await bridge1.getAddress(), ethers.parseEther("1000"), ethers.parseEther("1000"));
-  await xerc20.setBridgeLimits(await bridge2.getAddress(), ethers.parseEther("1000"), ethers.parseEther("1000"));
-  await xerc20.setBridgeLimits(await bridge3.getAddress(), ethers.parseEther("1000"), ethers.parseEther("1000"));
+  await xerc20.setBridgeLimits(await bridge1.getAddress(), toWei("1000"), toWei("1000"));
+  await xerc20.setBridgeLimits(await bridge2.getAddress(), toWei("1000"), toWei("1000"));
+  await xerc20.setBridgeLimits(await bridge3.getAddress(), toWei("1000"), toWei("1000"));
 
   tx = await factory.deployXERC20(baseTokenName + "DEST", baseTokenSymbol + "DEST");
   receipt = await tx.wait();
@@ -46,9 +49,9 @@ async function deployXERC20(factory, baseTokenAddress, baseTokenName, baseTokenS
   xERC20Address = event.args._xerc20;
 
   xerc20 = await ethers.getContractAt("XERC20", xERC20Address);
-  await xerc20.setBridgeLimits(await bridge1.getAddress(), ethers.parseEther("1000"), ethers.parseEther("1000"));
-  await xerc20.setBridgeLimits(await bridge2.getAddress(), ethers.parseEther("1000"), ethers.parseEther("1000"));
-  await xerc20.setBridgeLimits(await bridge3.getAddress(), ethers.parseEther("1000"), ethers.parseEther("1000"));
+  await xerc20.setBridgeLimits(await bridge1.getAddress(), toWei("1000"), toWei("1000"));
+  await xerc20.setBridgeLimits(await bridge2.getAddress(), toWei("1000"), toWei("1000"));
+  await xerc20.setBridgeLimits(await bridge3.getAddress(), toWei("1000"), toWei("1000"));
 
   return xerc20;
 }
@@ -109,21 +112,21 @@ async function initIBridge() {
   await bridge2.addDestination(await destinationForToken1.getAddress(), CHAIN_ID, await token1.getAddress());
 
   //Set default capacities
-  await bridge1.setShortCap(await token1.getAddress(), ethers.parseEther("1000"));
-  await bridge1.setLongCap(await token1.getAddress(), ethers.parseEther("1000"));
-  await bridge2.setShortCap(await token2.getAddress(), ethers.parseEther("1000"));
-  await bridge2.setLongCap(await token2.getAddress(), ethers.parseEther("1000"));
-  await bridge3.setShortCap(await token3.getAddress(), ethers.parseEther("1000"));
-  await bridge3.setLongCap(await token3.getAddress(), ethers.parseEther("1000"));
+  await bridge1.setShortCap(await token1.getAddress(), toWei("1000"));
+  await bridge1.setLongCap(await token1.getAddress(), toWei("1000"));
+  await bridge2.setShortCap(await token2.getAddress(), toWei("1000"));
+  await bridge2.setLongCap(await token2.getAddress(), toWei("1000"));
+  await bridge3.setShortCap(await token3.getAddress(), toWei("1000"));
+  await bridge3.setLongCap(await token3.getAddress(), toWei("1000"));
 
-  await bridge2.setShortCap(await destinationForToken1.getAddress(), ethers.parseEther("1000"));
-  await bridge2.setLongCap(await destinationForToken1.getAddress(), ethers.parseEther("1000"));
-  await bridge3.setShortCap(await destinationForToken1.getAddress(), ethers.parseEther("1000"));
-  await bridge3.setLongCap(await destinationForToken1.getAddress(), ethers.parseEther("1000"));
+  await bridge2.setShortCap(await destinationForToken1.getAddress(), toWei("1000"));
+  await bridge2.setLongCap(await destinationForToken1.getAddress(), toWei("1000"));
+  await bridge3.setShortCap(await destinationForToken1.getAddress(), toWei("1000"));
+  await bridge3.setLongCap(await destinationForToken1.getAddress(), toWei("1000"));
 
-  await token1.connect(deployer).mint(signer1.address, ethers.parseEther("100"));
-  await token1.connect(signer1).approve(await bridge1.getAddress(), ethers.parseEther("1000"));
-  await token1.connect(signer2).approve(await bridge1.getAddress(), ethers.parseEther("1000"));
+  await token1.connect(deployer).mint(signer1.address, toWei("100"));
+  await token1.connect(signer1).approve(await bridge1.getAddress(), toWei("1000"));
+  await token1.connect(signer2).approve(await bridge1.getAddress(), toWei("1000"));
 
   console.log(`Bridge1: ${await bridge1.getAddress()}`);
   console.log(`Bridge2: ${await bridge2.getAddress()}`);
@@ -172,7 +175,7 @@ describe("InceptionBridge", function () {
       let amount;
       args.forEach(function (arg) {
         it(`Deposit ${arg.name}`, async function () {
-          amount = parseEther("10");
+          amount = toWei("10");
           const fromToken = arg.fromToken();
           const toToken = arg.toToken();
           const toBridge = arg.toBridge();
@@ -246,22 +249,22 @@ describe("InceptionBridge", function () {
         const multipleDepositor = await MultipleDepositor.connect(deployer).deploy(await bridge1.getAddress());
         await multipleDepositor.waitForDeployment();
 
-        await token1.connect(signer1).approve(await multipleDepositor.getAddress(), ethers.parseEther("100"));
+        await token1.connect(signer1).approve(await multipleDepositor.getAddress(), toWei("100"));
 
-        expect((await token1.balanceOf(await signer1.getAddress())).toString()).to.be.equal(ethers.parseEther("100").toString());
-        expect((await token1.totalSupply()).toString()).to.be.equal(ethers.parseEther("100").toString());
+        expect((await token1.balanceOf(await signer1.getAddress())).toString()).to.be.equal(toWei("100").toString());
+        expect((await token1.totalSupply()).toString()).to.be.equal(toWei("100").toString());
 
         await expect(
           multipleDepositor
             .connect(signer1)
-            .deposit(await token1.getAddress(), CHAIN_ID, await signer2.getAddress(), ethers.parseEther("1").toString(), "10")
+            .deposit(await token1.getAddress(), CHAIN_ID, await signer2.getAddress(), toWei("1").toString(), "10")
         ).to.be.revertedWithCustomError(bridge1, "MultipleDeposits");
       });
 
       it("deposit: reverts when fromToken not supported", async function () {
-        await bridge1.setShortCap(await token3.getAddress(), ethers.parseEther("1000"));
-        await bridge1.setLongCap(await token3.getAddress(), ethers.parseEther("1000"));
-        const amount = parseEther("10");
+        await bridge1.setShortCap(await token3.getAddress(), toWei("1000"));
+        await bridge1.setLongCap(await token3.getAddress(), toWei("1000"));
+        const amount = toWei("10");
         await token3.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         await expect(
@@ -270,7 +273,7 @@ describe("InceptionBridge", function () {
       });
 
       it("deposit: reverts when destination chain not supported", async function () {
-        const amount = parseEther("10");
+        const amount = toWei("10");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         await expect(
@@ -280,7 +283,7 @@ describe("InceptionBridge", function () {
 
       it("deposit: reverts when paused", async function () {
         await bridge1.pause();
-        const amount = parseEther("10");
+        const amount = toWei("10");
         await expect(bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2, amount)).to.be.revertedWithCustomError(
           bridge1,
           "EnforcedPause"
@@ -297,7 +300,7 @@ describe("InceptionBridge", function () {
         await bridge1.addBridge(await bridge3.getAddress(), 666);
         await bridge1.addDestination(await token1.getAddress(), 666, await token2.getAddress());
 
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), 666, signer2.address, amount);
@@ -310,7 +313,7 @@ describe("InceptionBridge", function () {
       });
 
       it("withdraw: InvalidContractAddress", async function () {
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -324,7 +327,7 @@ describe("InceptionBridge", function () {
       });
 
       it("withdraw: InvalidFromTokenAddress", async function () {
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -351,7 +354,7 @@ describe("InceptionBridge", function () {
       it("withdraw: reverts when source bridge is unknown", async function () {
         await bridge2.removeBridge(CHAIN_ID);
 
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -368,7 +371,7 @@ describe("InceptionBridge", function () {
         await bridge1.removeDestination(await token1.getAddress(), CHAIN_ID, await destinationForToken1.getAddress());
         await bridge1.addDestination(await token1.getAddress(), CHAIN_ID, await token3.getAddress());
 
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -382,7 +385,7 @@ describe("InceptionBridge", function () {
       });
 
       it("withdraw: reverts when signed by not an notary", async function () {
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -396,7 +399,7 @@ describe("InceptionBridge", function () {
       });
 
       it("withdraw: reverts when has been used already", async function () {
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -412,7 +415,7 @@ describe("InceptionBridge", function () {
       });
 
       it("withdraw: reverts when paused", async function () {
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await token1.connect(signer1).approve(await bridge1.getAddress(), amount);
 
         let tx1 = await bridge1.connect(signer1).deposit(await token1.getAddress(), CHAIN_ID, signer2.address, amount);
@@ -435,7 +438,7 @@ describe("InceptionBridge", function () {
     describe("Capacity growth with each transaction", function () {
       before(async function () {
         await snapshot.restore();
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
@@ -484,15 +487,15 @@ describe("InceptionBridge", function () {
       before(async function () {
         await snapshot.restore();
 
-        await bridge1.setShortCap(await token1.getAddress(), ethers.parseEther("10"));
-        await bridge2.setShortCap(await token2.getAddress(), ethers.parseEther("10"));
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await bridge1.setShortCap(await token1.getAddress(), toWei("10"));
+        await bridge2.setShortCap(await token2.getAddress(), toWei("10"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
-        { amount: BigInt(ethers.parseEther("10")), signer: () => signer1 },
-        { amount: BigInt(ethers.parseEther("10")), signer: () => signer1 },
-        { amount: BigInt(ethers.parseEther("10")), signer: () => signer2 },
+        { amount: BigInt(toWei("10")), signer: () => signer1 },
+        { amount: BigInt(toWei("10")), signer: () => signer1 },
+        { amount: BigInt(toWei("10")), signer: () => signer2 },
       ];
       args.forEach(function (arg) {
         it(`depositCapDay per hour: ${arg.amount}`, async function () {
@@ -530,8 +533,8 @@ describe("InceptionBridge", function () {
       beforeEach(async function () {
         await snapshot.restore();
 
-        await bridge1.setShortCap(await token1.getAddress(), ethers.parseEther("10"));
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await bridge1.setShortCap(await token1.getAddress(), toWei("10"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
@@ -575,8 +578,8 @@ describe("InceptionBridge", function () {
       beforeEach(async function () {
         await snapshot.restore();
 
-        await bridge2.setShortCap(await destinationForToken1.getAddress(), ethers.parseEther("10"));
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await bridge2.setShortCap(await destinationForToken1.getAddress(), toWei("10"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
@@ -626,18 +629,18 @@ describe("InceptionBridge", function () {
       before(async function () {
         await snapshot.restore();
 
-        await bridge1.setShortCap(await token1.getAddress(), ethers.parseEther("10"));
-        await bridge1.setLongCap(await token1.getAddress(), ethers.parseEther("10"));
-        await bridge2.setShortCap(await token2.getAddress(), ethers.parseEther("10"));
-        await bridge2.setLongCap(await token2.getAddress(), ethers.parseEther("10"));
+        await bridge1.setShortCap(await token1.getAddress(), toWei("10"));
+        await bridge1.setLongCap(await token1.getAddress(), toWei("10"));
+        await bridge2.setShortCap(await token2.getAddress(), toWei("10"));
+        await bridge2.setLongCap(await token2.getAddress(), toWei("10"));
 
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
-        { amount: BigInt(ethers.parseEther("10")), signer: () => signer1 },
-        { amount: BigInt(ethers.parseEther("10")), signer: () => signer1 },
-        { amount: BigInt(ethers.parseEther("10")), signer: () => signer2 },
+        { amount: BigInt(toWei("10")), signer: () => signer1 },
+        { amount: BigInt(toWei("10")), signer: () => signer1 },
+        { amount: BigInt(toWei("10")), signer: () => signer2 },
       ];
       args.forEach(function (arg) {
         it(`depositCapDay per day: ${arg.amount}`, async function () {
@@ -673,8 +676,8 @@ describe("InceptionBridge", function () {
       beforeEach(async function () {
         await snapshot.restore();
 
-        await bridge1.setLongCap(await token1.getAddress(), ethers.parseEther("10"));
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await bridge1.setLongCap(await token1.getAddress(), toWei("10"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
@@ -719,8 +722,8 @@ describe("InceptionBridge", function () {
       beforeEach(async function () {
         await snapshot.restore();
 
-        await bridge2.setLongCap(await destinationForToken1.getAddress(), ethers.parseEther("10"));
-        await token1.connect(deployer).mint(signer2.address, ethers.parseEther("100"));
+        await bridge2.setLongCap(await destinationForToken1.getAddress(), toWei("10"));
+        await token1.connect(deployer).mint(signer2.address, toWei("100"));
       });
 
       const args = [
@@ -863,7 +866,7 @@ describe("InceptionBridge", function () {
           .to.emit(bridge3, "BridgeRemoved")
           .withArgs(await bridge1.getAddress(), ANOTHER_CHAIN);
 
-        const amount = parseEther("10");
+        const amount = toWei("10");
         await token3.connect(signer1).approve(await bridge3.getAddress(), amount);
         await expect(
           bridge3.connect(signer1).deposit(await token3.getAddress(), ANOTHER_CHAIN, signer2.address, amount)
@@ -937,7 +940,7 @@ describe("InceptionBridge", function () {
           .to.emit(bridge3, "DestinationRemoved")
           .withArgs(await token3.getAddress(), await token1.getAddress(), ANOTHER_CHAIN);
 
-        const amount = parseEther("1");
+        const amount = toWei("1");
         await expect(
           bridge3.connect(signer1).deposit(await token3.getAddress(), ANOTHER_CHAIN, signer2.address, amount)
         ).to.be.revertedWithCustomError(bridge1, "UnknownDestinationChain");
@@ -1172,11 +1175,11 @@ function generateInvalidWithdrawalData(consensus, receipt, invalidData) {
 async function toNextDay() {
   const block = await ethers.provider.getBlock("latest");
   const nextDayTs = Math.floor(block.timestamp / 86400 + 1) * 86400;
-  await time.increase(nextDayTs - block.timestamp);
+  await advanceTime(nextDayTs - block.timestamp);
 }
 
 async function toNextHour() {
   const block = await ethers.provider.getBlock("latest");
   const nextHourTs = Math.floor(block.timestamp / 3600 + 1) * 3600;
-  await time.increase(nextHourTs - block.timestamp);
+  await advanceTime(nextHourTs - block.timestamp);
 }
