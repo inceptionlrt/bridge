@@ -59,7 +59,7 @@ The bridges have the same address across all supported chains. The address is `0
 | ------- | ---------- | ------- | -------------------------------------------- |
 | inETH   | Arbitrum   | 42161   | `0x971b35225361535D04828F16442AAA54009efE1a` |
 | inETH   | Linea      | 59144   | `0xBf47307F7Bd75a8db3c8f69F913e9B77fc222e84` |
-| inETH   | Mode       | 34443   | `0xBf47307F7Bd75a8db3c8f69F913e9B77fc222e84` |
+| inETH   | Mode       | 34443   | `0x971b35225361535D04828F16442AAA54009efE1a` |
 | instETH | Arbitrum   | 42161   | `0x57a5a0567187FF4A8dcC1A9bBa86155E355878F2` |
 
 #### RatioFeeds
