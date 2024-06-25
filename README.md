@@ -67,7 +67,7 @@ The bridges have the same address across all supported chains. The address is `0
 
 | Chain Name | ChainId | Address                                      |
 | ---------- | ------- | -------------------------------------------- |
-| Arbitrum   | 42161   | `0xfE715358368416E01d3A961D3a037b7359735d5`  |
+| Arbitrum   | 42161   | `0xfE715358368416E01d3A961D3a037b7359735d5e`  |
 | Blast      | 81457   | `0xA9F8c770661BeE8DF2D026edB1Cb6FF763C780FF` |
 | Mode       | 34443   | `0xfE715358368416E01d3A961D3a037b7359735d5`  |
 | BSC        | 56      | `0x9181f633E9B9F15A32d5e37094F4C93b333e0E92` |
