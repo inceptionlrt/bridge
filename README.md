@@ -76,6 +76,8 @@ The bridges have the same address across all supported chains. The address is `0
 | BSC        | 56      | `0x9181f633E9B9F15A32d5e37094F4C93b333e0E92` |
 | Optimism   | 10      | `0xfD07fD5EBEa6F24888a397997E262179Bf494336` |
 | Linea      | 59144   | `0x048a2F5CD64B89f750cf14a5F36922Ae7b07221c` |
+| Ethereum   | 1       | `0xFd73Be536503B5Aa80Bf99D1Fd65b1306c69B191` |
+| X Layer    | 196     | `0x36B429439AB227fAB170A4dFb3321741c8815e55` |
 
 ### Testnet
 
