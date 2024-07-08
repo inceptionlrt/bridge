@@ -1,6 +1,6 @@
 {
-  "tokenName": "Inception Restaked ankrETH",
-  "tokenSymbol": "InankrETH",
+  "tokenName": "InceptionLRT restaked ETH",
+  "tokenSymbol": "inETH",
   "mintingAllowances": "1000000000000000000000",
   "burningAllowances": "1000000000000000000000"
 }
