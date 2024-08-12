@@ -72,14 +72,17 @@ contract Rebalancer is Ownable {
     }
 
     function _handleReceivedETH(uint256 amount) internal {
+        // Increase total ETH by the received amount
         totalETH += amount;
 
-        // Calculate the equivalent amount of inETH
+        // Calculate the equivalent amount of inETH based on the current ratio
         uint256 amountInETH = _calculateInETH(amount);
-        totalInETH += amountInETH;
 
-        // Deposit inETH into the Lockbox
+        // Ensure inETH is minted and deposited into the Lockbox
         depositInETHToLockbox(lockbox, amountInETH);
+
+        // Update the totalInETH only after successful deposit
+        totalInETH += amountInETH;
 
         // Deposit the received ETH into the LiquidPool
         depositETHToLiquidPool(liquidPool, amount);
