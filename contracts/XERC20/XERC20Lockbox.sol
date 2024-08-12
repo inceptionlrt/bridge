@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import "../interfaces/IXERC20Lockbox.sol";
 import "../interfaces/IXERC20.sol";
+import "./Rebalancer.sol";
 
 contract XERC20Lockbox is IXERC20Lockbox {
     using SafeERC20 for IERC20;
@@ -26,15 +27,23 @@ contract XERC20Lockbox is IXERC20Lockbox {
      */
     bool public immutable IS_NATIVE;
 
+    Rebalancer public rebalancer;
+
     /**
      * @param _xerc20 The address of the XERC20 contract
      * @param _erc20 The address of the ERC20 contract
      * @param _isNative Whether the ERC20 token is the native gas token of this chain or not
      */
-    constructor(address _xerc20, address _erc20, bool _isNative) payable {
+    constructor(
+        address _xerc20,
+        address _erc20,
+        bool _isNative,
+        _rebalancer
+    ) payable {
         XERC20 = IXERC20(_xerc20);
         ERC20 = IERC20(_erc20);
         IS_NATIVE = _isNative;
+        rebalancer = Rebalancer(_rebalancer);
     }
 
     /**
@@ -97,6 +106,7 @@ contract XERC20Lockbox is IXERC20Lockbox {
      */
     function _withdraw(address _to, uint256 _amount) internal {
         if (_to == address(this)) revert IXERC20Lockbox_WrongReceiver();
+        _updateRebalancerOnWithdraw(_amount, _amount);
         XERC20.burn(msg.sender, _amount);
         if (IS_NATIVE) {
             (bool _success, ) = payable(_to).call{value: _amount}("");
@@ -114,11 +124,26 @@ contract XERC20Lockbox is IXERC20Lockbox {
      */
     function _deposit(address _to, uint256 _amount) internal {
         if (_to == address(this)) revert IXERC20Lockbox_WrongReceiver();
+        _updateRebalancerOnDeposit(_amount, _amount);
         if (!IS_NATIVE)
             ERC20.safeTransferFrom(msg.sender, address(this), _amount);
 
         XERC20.mint(_to, _amount);
         emit Deposit(_to, _amount);
+    }
+
+    function _updateRebalancerOnDeposit(
+        uint256 _amount,
+        uint256 _amountX
+    ) internal {
+        rebalancer.updateBalanceOnDeposit(_amount, _amountX);
+    }
+
+    function _updateRebalancerOnWithdraw(
+        uint256 _amount,
+        uint256 _amountX
+    ) internal {
+        rebalancer.updateBalanceOnWithdraw(_amount, _amountX);
     }
 
     /**
