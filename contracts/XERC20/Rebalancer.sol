@@ -51,20 +51,6 @@ contract Rebalancer is Ownable {
         totalInETH += _tokenAmount;
     }
 
-    function setRatio(uint256 newRatio) external onlyOwner {
-        require(newRatio > 0, "Ratio must be greater than zero");
-
-        // Ensure the ratio is consistent with the total ETH and inETH
-        uint256 expectedInETH = (totalETH * 1e18) / newRatio;
-        require(
-            expectedInETH <= totalInETH,
-            "Invalid ratio: Insufficient inETH"
-        );
-
-        ratio = newRatio;
-        emit RatioUpdated(newRatio);
-    }
-
     receive() external payable {
         require(msg.value > 0, "No ETH sent");
         emit ETHReceived(msg.sender, msg.value);
@@ -107,6 +93,24 @@ contract Rebalancer is Ownable {
         } catch {
             revert("Lockbox deposit failed");
         }
+    }
+
+    
+    /// @notice only l2Target can update greeting
+    function receiveL2Info(uint256 _balance, uint256 _totalSupply) public {
+        IBridge bridge = inbox.bridge();
+        // this prevents reentrancies on L2 to L1 txs
+        require(msg.sender == address(bridge), "NOT_BRIDGE");
+        IOutbox outbox = IOutbox(bridge.activeOutbox());
+        address l2Sender = outbox.l2ToL1Sender();
+        require(l2Sender == l2Target, "Rebalancer only updateable by L2");
+
+        l2TotalSupply = _totalSupply;
+        l2Balance = _balance;
+
+        //Omnivault mints additional +=_totalSupply tokens
+
+        emit L2InfoReceived(_totalSupply, _balance);
     }
 
     function depositETHToLiquidPool(
