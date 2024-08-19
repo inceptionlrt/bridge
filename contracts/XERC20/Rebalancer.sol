@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract Rebalancer is Ownable {
     address public lockbox;
@@ -95,7 +96,6 @@ contract Rebalancer is Ownable {
         }
     }
 
-    
     /// @notice only l2Target can update greeting
     function receiveL2Info(uint256 _balance, uint256 _totalSupply) public {
         IBridge bridge = inbox.bridge();
@@ -109,6 +109,13 @@ contract Rebalancer is Ownable {
         l2Balance = _balance;
 
         //Omnivault mints additional +=_totalSupply tokens
+        uint256 currentBalance = lockbox.totalSupply();
+        int256 diff = _totalSupply - currentBalance;
+        if (_totalSupply - currentBalance > 0) {
+            uint256 mintAmount = uint256(diff);
+            ElevatedIERC20(inETHAddress).mint(lockbox, _totalSupply);
+            //emit additional info
+        }
 
         emit L2InfoReceived(_totalSupply, _balance);
     }
