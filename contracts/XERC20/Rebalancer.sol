@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Inbox.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Outbox.sol";
 
+import "hardhat/console.sol";
+
 /// @dev stub for Inception Token
 contract InETH is ERC20, Ownable {
     address public rebalancer;
@@ -51,10 +53,9 @@ contract Rebalancer is Ownable {
     address public inETHAddress;
 
     uint256 public totalETH;
-    uint256 public totalInETH;
     uint256 public constant ratio = 0.5 ether;
     uint256 public constant MULTIPLIER = 1e18;
-    uint256 public constant MAX_DIFF = 100000;
+    uint256 public constant MAX_DIFF = 50000000000000000; // 0.05 * 1e18
     uint256 public totalAmountToWithdraw = 0; //stub for getRatio()
 
     uint24 public constant ARBITRUM_CHAIN_ID = 421614;
@@ -203,7 +204,7 @@ contract Rebalancer is Ownable {
             total2ETH += txData.ethBalance;
         }
 
-        uint256 l2Ratio = (totalL2InETH * MULTIPLIER) / total2ETH;
+        uint256 l2Ratio = getRatioL2(totalL2InETH, total2ETH);
         int256 ratioDiff = int256(l2Ratio) - int256(getRatio());
 
         require(
@@ -211,11 +212,25 @@ contract Rebalancer is Ownable {
             "Ratio diff bigger than threshold"
         );
 
-        int256 totalSupplyDiff = int256(totalL2InETH) - int256(totalInETH);
-        if (totalSupplyDiff > 0) {
+        uint256 totalInETH = totalInETH();
+
+        uint256 totalSupplyDiff = totalInETH > totalL2InETH
+            ? totalInETH - totalL2InETH
+            : totalL2InETH - totalInETH;
+
+        console.logString(">>totalInETH:");
+        console.logUint(totalInETH);
+
+        console.logString(">>totalL2InETH:");
+        console.logUint(totalL2InETH);
+        if (totalInETH < totalL2InETH) {
+            console.logString(">>amount to mint:");
+            console.logUint(totalSupplyDiff);
             mintInceptionToken(uint256(totalSupplyDiff));
-        } else if (totalSupplyDiff < 0) {
-            burnInceptionToken(uint256(-totalSupplyDiff));
+        } else if (totalInETH > totalL2InETH) {
+            console.logString(">>amount to burn:");
+            console.logUint(totalSupplyDiff);
+            burnInceptionToken(uint256(totalSupplyDiff));
         }
     }
 
@@ -251,12 +266,23 @@ contract Rebalancer is Ownable {
 
         if (denominator == 0 || totalSupply == 0) return 1e18;
 
-        return (totalSupply * 1e18) / denominator;
+        return (totalSupply * MULTIPLIER) / denominator;
+    }
+
+    function getRatioL2(
+        uint256 _tokenAmount,
+        uint256 _ethAmount
+    ) public pure returns (uint256) {
+        return (_tokenAmount * MULTIPLIER) / _ethAmount;
     }
 
     ///@dev stub for getRatio()
     function getTotalDeposited() public view returns (uint256) {
         return totalETH;
+    }
+
+    function totalInETH() internal view returns (uint256) {
+        return IERC20(inETHAddress).balanceOf(address(this));
     }
 
     function abs(int256 x) internal pure returns (uint256) {
