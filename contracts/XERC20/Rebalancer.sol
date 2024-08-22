@@ -6,8 +6,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Inbox.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Outbox.sol";
 
+/// @dev stub for Inception Token
 contract InETH is ERC20, Ownable {
     address public rebalancer;
+
+    modifier onlyOwnerOrRebalancer() {
+        require(
+            msg.sender == owner() || msg.sender == rebalancer,
+            "Only owner or rebalancer can call"
+        );
+        _;
+    }
 
     constructor(
         address _owner,
@@ -18,22 +27,21 @@ contract InETH is ERC20, Ownable {
 
     /// @notice Allows the owner to update the Rebalancer contract address
     /// @param _rebalancer The address of the new Rebalancer contract
-    function setRebalancer(address _rebalancer) external onlyOwner {
+    function setRebalancer(address _rebalancer) external onlyOwnerOrRebalancer {
         rebalancer = _rebalancer;
     }
 
-    /// @notice Mints `amount` of inETH to `account`
-    /// @param account The address to receive the minted tokens
+    /// @notice Mints `amount` of inETH
     /// @param amount The amount of tokens to mint
-    function mint(address account, uint256 amount) external {
-        require(msg.sender == rebalancer, "inETH: Only Rebalancer can mint");
-        _mint(account, amount);
+    function mint(uint256 amount) external onlyOwnerOrRebalancer {
+        require(rebalancer != address(0), "rebalancer not set");
+        _mint(rebalancer, amount);
     }
 
     /// @notice Burns `amount` of inETH from `account`
     /// @param amount The amount of tokens to burn
-    function burn(uint256 amount) external {
-        require(msg.sender == rebalancer, "inETH: Only Rebalancer can burn");
+    function burn(uint256 amount) external onlyOwnerOrRebalancer {
+        require(rebalancer != address(0), "rebalancer not set");
         _burn(msg.sender, amount);
     }
 }
@@ -45,8 +53,9 @@ contract Rebalancer is Ownable {
     uint256 public totalETH;
     uint256 public totalInETH;
     uint256 public constant ratio = 0.5 ether;
-    uint256 public constant DENOMINATOR = 1e18;
+    uint256 public constant MULTIPLIER = 1e18;
     uint256 public constant MAX_DIFF = 100000;
+    uint256 public totalAmountToWithdraw = 0; //stub for getRatio()
 
     uint24 public constant ARBITRUM_CHAIN_ID = 421614;
     uint24 public constant OPTIMISM_CHAIN_ID = 17000;
@@ -146,19 +155,6 @@ contract Rebalancer is Ownable {
             );
         }
 
-        // Calculate the ratio between _totalSupply and _balance from L2
-        uint256 calculatedRatio = (_totalSupply * DENOMINATOR) / _balance;
-
-        // Get the current ratio of the Rebalancer
-        uint256 currentRatio = getRatio();
-
-        // Ensure the difference between the calculated ratio and the current ratio is within the allowed threshold
-        require(
-            calculatedRatio <= currentRatio + MAX_DIFF &&
-                calculatedRatio >= currentRatio - MAX_DIFF,
-            "Calculated ratio difference exceeds allowed threshold"
-        );
-
         Transaction memory newUpdate = Transaction({
             timestamp: _timestamp,
             ethBalance: _balance,
@@ -198,56 +194,84 @@ contract Rebalancer is Ownable {
 
     function updateTreasuryData() external {
         uint256 totalL2InETH = 0;
+        uint256 total2ETH = 0;
 
         for (uint i = 0; i < chainIds.length; i++) {
             uint32 chainId = chainIds[i];
             Transaction memory txData = txs[chainId];
             totalL2InETH += txData.inEthBalance;
+            total2ETH += txData.ethBalance;
         }
 
-        int256 difference = int256(totalL2InETH) - int256(totalInETH);
+        uint256 l2Ratio = (totalL2InETH * MULTIPLIER) / total2ETH;
+        int256 ratioDiff = int256(l2Ratio) - int256(getRatio());
 
-        if (difference > 0) {
-            mintInETH(uint256(difference));
-        } else if (difference < 0) {
-            burnInETH(uint256(-difference));
+        require(
+            !isAGreaterThanB(ratioDiff, int256(MAX_DIFF)),
+            "Ratio diff bigger than threshold"
+        );
+
+        int256 totalSupplyDiff = int256(totalL2InETH) - int256(totalInETH);
+        if (totalSupplyDiff > 0) {
+            mintInceptionToken(uint256(totalSupplyDiff));
+        } else if (totalSupplyDiff < 0) {
+            burnInceptionToken(uint256(-totalSupplyDiff));
         }
-
-        totalInETH = totalL2InETH;
     }
 
-    function mintAdmin(uint256 _inEth, uint256 _Eth) external onlyOwner {
+    function mintInceptionToken(uint256 _amountToMint) internal {
+        require(inETHAddress != address(0), "inETH address is not set");
+        InETH(inETHAddress).mint(_amountToMint);
+    }
+
+    function burnInceptionToken(uint256 _amountToBurn) internal {
+        require(inETHAddress != address(0), "inETH address is not set");
+        InETH(inETHAddress).burn(_amountToBurn);
+    }
+
+    function mintAdmin(uint256 _inEth, uint256 _Eth) public onlyOwner {
+        require(inETHAddress != address(0), "inETH address is not set");
         totalETH += _Eth;
-        totalInETH += _inEth;
+        InETH(inETHAddress).mint(_inEth);
     }
 
-    function burnAdmin(uint256 _inEth, uint256 _Eth) external onlyOwner {
+    function burnAdmin(uint256 _inEth, uint256 _Eth) public onlyOwner {
+        require(inETHAddress != address(0), "inETH address is not set");
         totalETH -= _Eth;
-        totalInETH -= _inEth;
+        InETH(inETHAddress).burn(_inEth);
     }
 
     function getRatio() public view returns (uint256) {
-        if (totalInETH == 0 || totalETH == 0) {
-            return 0;
+        uint256 totalDeposited = getTotalDeposited();
+        uint256 totalSupply = IERC20(inETHAddress).totalSupply();
+        // take into account the pending withdrawn amount
+        uint256 denominator = totalDeposited < totalAmountToWithdraw
+            ? 0
+            : totalDeposited - totalAmountToWithdraw;
+
+        if (denominator == 0 || totalSupply == 0) return 1e18;
+
+        return (totalSupply * 1e18) / denominator;
+    }
+
+    ///@dev stub for getRatio()
+    function getTotalDeposited() public view returns (uint256) {
+        return totalETH;
+    }
+
+    function abs(int256 x) internal pure returns (uint256) {
+        return x < 0 ? uint256(-x) : uint256(x);
+    }
+
+    // Function to compare the absolute values of two integers
+    function isAGreaterThanB(int256 a, int256 b) internal pure returns (bool) {
+        uint256 absA = abs(a);
+        uint256 absB = abs(b);
+
+        if (absA > absB) {
+            return true;
+        } else {
+            return false;
         }
-        uint256(totalInETH * DENOMINATOR) / totalETH;
-    }
-
-    function mintInETH(uint256 amount) internal {
-        require(inETHAddress != address(0), "inETH address is not set");
-        InETH(inETHAddress).mint(address(this), amount);
-    }
-
-    function burnInETH(uint256 amount) internal {
-        require(inETHAddress != address(0), "inETH address is not set");
-        InETH(inETHAddress).burn(amount);
-    }
-
-    function updateBalanceOnDeposit(
-        uint256 _tokenAmount,
-        uint256 _tokenAmountX
-    ) external {
-        totalETH += _tokenAmountX;
-        totalInETH -= _tokenAmount;
     }
 }
