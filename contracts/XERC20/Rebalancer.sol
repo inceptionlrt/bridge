@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Inbox.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Outbox.sol";
 
-import "hardhat/console.sol";
-
 /// @dev stub for Inception Token
 contract InETH is ERC20, Ownable {
     address public rebalancer;
@@ -212,24 +210,15 @@ contract Rebalancer is Ownable {
             "Ratio diff bigger than threshold"
         );
 
-        uint256 totalInETH = totalInETH();
+        uint256 _totalInETH = totalInETH();
 
-        uint256 totalSupplyDiff = totalInETH > totalL2InETH
-            ? totalInETH - totalL2InETH
-            : totalL2InETH - totalInETH;
+        uint256 totalSupplyDiff = _totalInETH > totalL2InETH
+            ? _totalInETH - totalL2InETH
+            : totalL2InETH - _totalInETH;
 
-        console.logString(">>totalInETH:");
-        console.logUint(totalInETH);
-
-        console.logString(">>totalL2InETH:");
-        console.logUint(totalL2InETH);
-        if (totalInETH < totalL2InETH) {
-            console.logString(">>amount to mint:");
-            console.logUint(totalSupplyDiff);
+        if (_totalInETH < totalL2InETH) {
             mintInceptionToken(uint256(totalSupplyDiff));
-        } else if (totalInETH > totalL2InETH) {
-            console.logString(">>amount to burn:");
-            console.logUint(totalSupplyDiff);
+        } else if (_totalInETH > totalL2InETH) {
             burnInceptionToken(uint256(totalSupplyDiff));
         }
     }
