@@ -148,7 +148,7 @@ describe("Rebalancer and InETH Contracts", function () {
             const { rebalancer, inETH } = await loadFixture(deployContractsFixture);
 
             const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1000");
+            const l1InEthAmount = hre.ethers.parseEther("1199");
             await rebalancer.mintAdmin(l1InEthAmount, l1EthAmount);
 
             // Simulate L2 data where L2 has more inETH than L1
@@ -168,7 +168,7 @@ describe("Rebalancer and InETH Contracts", function () {
             const { rebalancer, inETH } = await loadFixture(deployContractsFixture);
 
             const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1200");
+            const l1InEthAmount = hre.ethers.parseEther("1001");
             await rebalancer.mintAdmin(l1InEthAmount, l1EthAmount);
 
             // Simulate L2 data where L2 has less inETH than L1
