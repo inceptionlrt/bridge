@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Lockbox.sol";
 import "./CrossChainBridge.sol";
 
+import "hardhat/console.sol";
+
 contract InETH is ERC20, Ownable {
     address public rebalancer;
     address public lockbox;
@@ -38,9 +40,23 @@ contract InETH is ERC20, Ownable {
         _mint(lockbox, amount);
     }
 
+    function mint(
+        uint256 amount,
+        address receiver
+    ) external onlyOwnerOrRebalancer {
+        _mint(receiver, amount);
+    }
+
     function burn(uint256 amount) external onlyOwnerOrRebalancer {
         require(lockbox != address(0), "lockbox not set");
         _burn(lockbox, amount);
+    }
+
+    function burn(
+        uint256 amount,
+        address receiver
+    ) external onlyOwnerOrRebalancer {
+        _burn(receiver, amount);
     }
 }
 
@@ -133,9 +149,25 @@ contract Rebalancer is Ownable {
         InETH(inETHAddress).mint(_amountToMint);
     }
 
+    function mintInceptionToken(
+        uint256 _amountToMint,
+        address _receiver
+    ) public {
+        require(inETHAddress != address(0), "inETH address is not set");
+        InETH(inETHAddress).mint(_amountToMint, _receiver);
+    }
+
     function burnInceptionToken(uint256 _amountToBurn) internal {
         require(inETHAddress != address(0), "inETH address is not set");
         InETH(inETHAddress).burn(_amountToBurn);
+    }
+
+    function burnInceptionToken(
+        uint256 _amountToBurn,
+        address _receiver
+    ) public {
+        require(inETHAddress != address(0), "inETH address is not set");
+        InETH(inETHAddress).burn(_amountToBurn, _receiver);
     }
 
     function getRatio() public view returns (uint256) {
@@ -179,6 +211,7 @@ contract Rebalancer is Ownable {
     receive() external payable {
         LiquidPool lp = LiquidPool(liqPool);
         lp.deposit{value: msg.value}();
+        //updateTreasuryData();
     }
 }
 
@@ -212,10 +245,18 @@ contract LiquidPool {
         // Get the current minting ratio from Rebalancer
         uint256 mintingRatio = Rebalancer(rebalancerAddress).getRatio();
 
-        // Calculate the amount of InETH to mint
-        uint256 inETHToMint = (msg.value * mintingRatio) / 1e18;
+        if (mintingRatio == 0) {
+            mintingRatio = 1;
+        }
 
+        // Calculate the amount of InETH to mint
+        uint256 inETHToMint = (msg.value * 1e18 * mintingRatio) / 1e18;
+
+        Rebalancer rebalancer = Rebalancer(rebalancerAddress);
+
+        console.log("here");
         // Mint InETH tokens to the sender
+        rebalancer.mintInceptionToken(inETHToMint, msg.sender);
         require(
             IERC20(inETHAddress).transfer(msg.sender, inETHToMint),
             "Minting failed"
@@ -234,4 +275,6 @@ contract LiquidPool {
     function setInETHAddress(address _inETHAddress) external onlyOwner {
         inETHAddress = _inETHAddress;
     }
+
+    receive() external payable {}
 }
