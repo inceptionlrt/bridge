@@ -1,70 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.26;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Lockbox.sol";
-import "./CrossChainBridge.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "hardhat/console.sol";
-
-contract InETH is ERC20, Ownable {
-    address public rebalancer;
-    address public lockbox;
-
-    modifier onlyOwnerOrRebalancer() {
-        require(
-            msg.sender == owner() || msg.sender == rebalancer,
-            "Only owner or rebalancer can call"
-        );
-        _;
-    }
-
-    constructor(
-        address _owner,
-        address _rebalancer
-    ) ERC20("inETH", "inETH") Ownable(_owner) {
-        rebalancer = _rebalancer;
-    }
-
-    function setRebalancer(address _rebalancer) external onlyOwnerOrRebalancer {
-        rebalancer = _rebalancer;
-    }
-
-    function setLockbox(address _lockbox) external onlyOwnerOrRebalancer {
-        lockbox = _lockbox;
-    }
-
-    function mint(uint256 amount) external onlyOwnerOrRebalancer {
-        require(lockbox != address(0), "lockbox not set");
-        _mint(lockbox, amount);
-    }
-
-    function mint(
-        uint256 amount,
-        address receiver
-    ) external onlyOwnerOrRebalancer {
-        _mint(receiver, amount);
-    }
-
-    function burn(uint256 amount) external onlyOwnerOrRebalancer {
-        require(lockbox != address(0), "lockbox not set");
-        _burn(lockbox, amount);
-    }
-
-    function burn(
-        uint256 amount,
-        address receiver
-    ) external onlyOwnerOrRebalancer {
-        _burn(receiver, amount);
-    }
-}
+import "./TransactionStorage.sol";
+import {IERC20Mintable} from "../interfaces/IERC20.sol";
+import "../interfaces/IRestakingPool.sol";
 
 contract Rebalancer is Ownable {
     address public inETHAddress;
     address public lockboxAddress;
-    address payable public crossChainBridge;
     address payable public liqPool;
+    address public transactionStorage;
 
     uint256 public totalETH;
     uint256 public constant ratio = 0.5 ether;
@@ -81,10 +29,10 @@ contract Rebalancer is Ownable {
 
     constructor(address _owner) Ownable(_owner) {}
 
-    function setCrossChainBridge(
-        address payable _crossChainBridge
+    function setTransactionStorage(
+        address _transactionStorage
     ) external onlyOwner {
-        crossChainBridge = _crossChainBridge;
+        transactionStorage = _transactionStorage;
     }
 
     function setInETHAddress(address _inETHAddress) external onlyOwner {
@@ -103,12 +51,14 @@ contract Rebalancer is Ownable {
         uint256 totalL2InETH = 0;
         uint256 total2ETH = 0;
 
-        CrossChainBridge bridge = CrossChainBridge(crossChainBridge);
-        uint32[] memory allChainIds = bridge.getAllChainIds();
+        TransactionStorage storageContract = TransactionStorage(
+            transactionStorage
+        );
+        uint32[] memory allChainIds = storageContract.getAllChainIds();
 
         for (uint i = 0; i < allChainIds.length; i++) {
             uint32 chainId = allChainIds[i];
-            CrossChainBridge.Transaction memory txData = bridge
+            TransactionStorage.Transaction memory txData = storageContract
                 .getTransactionData(chainId);
             totalL2InETH += txData.inEthBalance;
             total2ETH += txData.ethBalance;
@@ -146,7 +96,7 @@ contract Rebalancer is Ownable {
 
     function mintInceptionToken(uint256 _amountToMint) internal {
         require(inETHAddress != address(0), "inETH address is not set");
-        InETH(inETHAddress).mint(_amountToMint);
+        IERC20Mintable(inETHAddress).mint(_amountToMint);
     }
 
     function mintInceptionToken(
@@ -154,12 +104,12 @@ contract Rebalancer is Ownable {
         address _receiver
     ) public {
         require(inETHAddress != address(0), "inETH address is not set");
-        InETH(inETHAddress).mint(_amountToMint, _receiver);
+        IERC20Mintable(inETHAddress).mint(_amountToMint, _receiver);
     }
 
     function burnInceptionToken(uint256 _amountToBurn) internal {
         require(inETHAddress != address(0), "inETH address is not set");
-        InETH(inETHAddress).burn(_amountToBurn);
+        IERC20Mintable(inETHAddress).burn(_amountToBurn);
     }
 
     function burnInceptionToken(
@@ -167,7 +117,7 @@ contract Rebalancer is Ownable {
         address _receiver
     ) public {
         require(inETHAddress != address(0), "inETH address is not set");
-        InETH(inETHAddress).burn(_amountToBurn, _receiver);
+        IERC20Mintable(inETHAddress).burn(_amountToBurn, _receiver);
     }
 
     function getRatio() public view returns (uint256) {
@@ -209,72 +159,7 @@ contract Rebalancer is Ownable {
     }
 
     receive() external payable {
-        LiquidPool lp = LiquidPool(liqPool);
+        LiquidPool lp = IRestakingPool(liqPool);
         lp.deposit{value: msg.value}();
-        //updateTreasuryData();
     }
-}
-
-contract LiquidPool {
-    address public owner;
-    address payable public rebalancerAddress;
-    address public inETHAddress;
-
-    event Deposit(address indexed sender, uint256 amount);
-    event MintInETH(address indexed recipient, uint256 amount);
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call");
-        _;
-    }
-
-    constructor(
-        address payable _rebalancerAddress,
-        address _inETHAddress,
-        address _owner
-    ) {
-        rebalancerAddress = _rebalancerAddress;
-        inETHAddress = _inETHAddress;
-        owner = _owner;
-    }
-
-    // Function to receive ETH deposits and mint InETH tokens
-    function deposit() external payable {
-        require(msg.value > 0, "No ETH sent");
-
-        // Get the current minting ratio from Rebalancer
-        uint256 mintingRatio = Rebalancer(rebalancerAddress).getRatio();
-
-        if (mintingRatio == 0) {
-            mintingRatio = 1;
-        }
-
-        // Calculate the amount of InETH to mint
-        uint256 inETHToMint = (msg.value * 1e18 * mintingRatio) / 1e18;
-
-        Rebalancer rebalancer = Rebalancer(rebalancerAddress);
-
-        console.log("here");
-        // Mint InETH tokens to the sender
-        rebalancer.mintInceptionToken(inETHToMint, msg.sender);
-        require(
-            IERC20(inETHAddress).transfer(msg.sender, inETHToMint),
-            "Minting failed"
-        );
-
-        emit Deposit(msg.sender, msg.value);
-        emit MintInETH(msg.sender, inETHToMint);
-    }
-
-    function setRebalancer(
-        address payable _rebalancerAddress
-    ) external onlyOwner {
-        rebalancerAddress = _rebalancerAddress;
-    }
-
-    function setInETHAddress(address _inETHAddress) external onlyOwner {
-        inETHAddress = _inETHAddress;
-    }
-
-    receive() external payable {}
 }

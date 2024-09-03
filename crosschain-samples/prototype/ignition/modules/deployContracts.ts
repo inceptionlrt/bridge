@@ -21,14 +21,14 @@ const DeployContractsModule = buildModule("DeployContractsModule", (m) => {
     m.call(rebalancer, 'setLockboxAddress', [lockbox]);
     m.call(rebalancer, 'setLiqPool', [liquidPool]);
 
-    // Deploy CrossChainBridge contract
-    const crossChainBridge = m.contract('CrossChainBridge', [deployer, liquidPool]);
+    // Deploy CrossChainAdapter contract
+    const CrossChainAdapter = m.contract('CrossChainAdapter', [deployer, liquidPool]);
 
-    // Set CrossChainBridge address in Rebalancer
-    m.call(rebalancer, 'setCrossChainBridge', [crossChainBridge]);
-    m.call(crossChainBridge, 'setRebalancer', [rebalancer]);
+    // Set CrossChainAdapter address in Rebalancer
+    m.call(rebalancer, 'setCrossChainAdapter', [CrossChainAdapter]);
+    m.call(CrossChainAdapter, 'setRebalancer', [rebalancer]);
 
-    return { rebalancer, inETH, lockbox, liquidPool, crossChainBridge };
+    return { rebalancer, inETH, lockbox, liquidPool, CrossChainAdapter };
 });
 
 export default DeployContractsModule;
