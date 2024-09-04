@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.26;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
@@ -16,15 +16,6 @@ contract CrossChainBridgeOptimism is ICrossChainAdapter, Ownable {
     address public l2Target; // Address of the LiquidityPool contract on Optimism (L2)
 
     uint24 public constant OPTIMISM_CHAIN_ID = 17000;
-
-    event L2InfoReceived(
-        uint256 indexed networkId,
-        uint256 timestamp,
-        uint256 ethBalance,
-        uint256 inEthBalance
-    );
-
-    event L2EthDeposit(uint256 indexed value);
 
     constructor(
         address _owner,
@@ -53,8 +44,8 @@ contract CrossChainBridgeOptimism is ICrossChainAdapter, Ownable {
         uint256 _totalSupply
     ) public {
         // Verify sender is from the Optimism bridge (assuming a similar mechanism exists)
-        require(msg.sender == inboxOptimism, "NOT_OPTIMISM_INBOX");
-        require(_timestamp <= block.timestamp, "Time cannot be in the future");
+        require(msg.sender == inboxOptimism, NotBridge());
+        require(_timestamp <= block.timestamp, FutureTimestamp());
 
         transactionStorage.handleL2Info(
             OPTIMISM_CHAIN_ID,
@@ -71,7 +62,7 @@ contract CrossChainBridgeOptimism is ICrossChainAdapter, Ownable {
     receive() external payable {
         (bool success, ) = rebalancer.call{value: msg.value}("");
 
-        require(success, "Transfer to rebalancer failed");
+        require(success, TransferToRebalancerFailed());
         emit L2EthDeposit(msg.value);
     }
 }

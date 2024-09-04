@@ -1,24 +1,29 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.26;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./TransactionStorage.sol";
 import {IERC20Mintable} from "../interfaces/IERC20.sol";
 import "../interfaces/IRestakingPool.sol";
 
-contract Rebalancer is Ownable {
+contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     address public inETHAddress;
     address public lockboxAddress;
     address payable public liqPool;
     address public transactionStorage;
 
-    uint256 public totalETH;
-    uint256 public constant ratio = 0.5 ether;
     uint256 public constant MULTIPLIER = 1e18;
     uint256 public constant MAX_DIFF = 50000000000000000; // 0.05 * 1e18
-    uint256 public totalAmountToWithdraw = 0; //stub for getRatio()
+    uint256 public totalAmountToWithdraw; // Initialized in initialize
+
+    error RatioDifferenceTooHigh();
+    error TransferToLockboxFailed();
+    error InETHAddressNotSet();
+    error LiquidityPoolNotSet();
 
     event ETHReceived(address sender, uint256 amount);
     event ETHDepositedToLiquidPool(address liquidPool, uint256 amountETH);
@@ -27,7 +32,19 @@ contract Rebalancer is Ownable {
     event ChainIdAdded(uint32 newChainId);
     event RetryableTicketCreated(uint256 indexed ticketId);
 
-    constructor(address _owner) Ownable(_owner) {}
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _owner) public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+        _transferOwnership(_owner);
+        totalAmountToWithdraw = 0;
+    }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function setTransactionStorage(
         address _transactionStorage
@@ -69,7 +86,7 @@ contract Rebalancer is Ownable {
 
         require(
             !isAGreaterThanB(ratioDiff, int256(MAX_DIFF)),
-            "Ratio diff bigger than threshold"
+            RatioDifferenceTooHigh.selector
         );
 
         uint256 _totalInETH = totalInETH();
@@ -89,13 +106,13 @@ contract Rebalancer is Ownable {
         if (inETHBalance > 0) {
             require(
                 IERC20(inETHAddress).transfer(lockboxAddress, inETHBalance),
-                "Transfer to Lockbox failed"
+                TransferToLockboxFailed.selector
             );
         }
     }
 
     function mintInceptionToken(uint256 _amountToMint) internal {
-        require(inETHAddress != address(0), "inETH address is not set");
+        require(inETHAddress != address(0), InETHAddressNotSet.selector);
         IERC20Mintable(inETHAddress).mint(_amountToMint);
     }
 
@@ -103,12 +120,12 @@ contract Rebalancer is Ownable {
         uint256 _amountToMint,
         address _receiver
     ) public {
-        require(inETHAddress != address(0), "inETH address is not set");
+        require(inETHAddress != address(0), InETHAddressNotSet.selector);
         IERC20Mintable(inETHAddress).mint(_amountToMint, _receiver);
     }
 
     function burnInceptionToken(uint256 _amountToBurn) internal {
-        require(inETHAddress != address(0), "inETH address is not set");
+        require(inETHAddress != address(0), InETHAddressNotSet.selector);
         IERC20Mintable(inETHAddress).burn(_amountToBurn);
     }
 
@@ -116,7 +133,7 @@ contract Rebalancer is Ownable {
         uint256 _amountToBurn,
         address _receiver
     ) public {
-        require(inETHAddress != address(0), "inETH address is not set");
+        require(inETHAddress != address(0), InETHAddressNotSet.selector);
         IERC20Mintable(inETHAddress).burn(_amountToBurn, _receiver);
     }
 
@@ -140,7 +157,7 @@ contract Rebalancer is Ownable {
     }
 
     function getTotalDeposited() public view returns (uint256) {
-        require(liqPool != address(0), "Liquidity pool not set");
+        require(liqPool != address(0), LiquidityPoolNotSet.selector);
         return liqPool.balance;
     }
 
@@ -159,7 +176,7 @@ contract Rebalancer is Ownable {
     }
 
     receive() external payable {
-        LiquidPool lp = IRestakingPool(liqPool);
+        IRestakingPool lp = IRestakingPool(liqPool);
         lp.deposit{value: msg.value}();
     }
 }

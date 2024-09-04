@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.26;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Inbox.sol";
@@ -16,15 +16,6 @@ contract CrossChainBridgeArbitrum is ICrossChainAdapter, Ownable {
     address payable public liqPool;
     address public inboxArbitrum;
     address public l2Target;
-
-    event L2InfoReceived(
-        uint256 indexed networkId,
-        uint256 timestamp,
-        uint256 ethBalance,
-        uint256 inEthBalance
-    );
-
-    event L2EthDeposit(uint256 indexed value);
 
     constructor(
         address _owner,
@@ -53,11 +44,11 @@ contract CrossChainBridgeArbitrum is ICrossChainAdapter, Ownable {
         uint256 _totalSupply
     ) public {
         IBridge bridge = IInbox(inboxArbitrum).bridge();
-        require(msg.sender == address(bridge), "NOT_BRIDGE");
-        require(_timestamp <= block.timestamp, "Time cannot be in the future");
+        require(msg.sender == address(bridge), NotBridge.selector);
+        require(_timestamp <= block.timestamp, FutureTimestamp.selector);
         IOutbox outbox = IOutbox(bridge.activeOutbox());
         address l2Sender = outbox.l2ToL1Sender();
-        require(l2Sender == l2Target, "Rebalancer only updatable by L2");
+        require(l2Sender == l2Target, NotAuthorizedByL2.selector);
 
         transactionStorage.handleL2Info(
             ARBITRUM_CHAIN_ID,
@@ -73,8 +64,7 @@ contract CrossChainBridgeArbitrum is ICrossChainAdapter, Ownable {
 
     receive() external payable {
         (bool success, ) = rebalancer.call{value: msg.value}("");
-
-        require(success, "Transfer to rebalancer failed");
+        require(success, TransferToRebalancerFailed.selector);
         emit L2EthDeposit(msg.value);
     }
 }

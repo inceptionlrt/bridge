@@ -8,6 +8,11 @@ interface ICrossChainBridge {
         uint256 inEthBalance;
     }
 
+    error NotBridge();
+    error FutureTimestamp();
+    error NotAuthorizedByL2();
+    error TransferToRebalancerFailed();
+
     event L2InfoReceived(
         uint256 indexed networkId,
         uint256 timestamp,
