@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./TransactionStorage.sol";
+import "../../interfaces/IInceptionOmniVault.sol";
 import {IERC20Mintable} from "../interfaces/IERC20.sol";
 import "../interfaces/IRestakingPool.sol";
 
@@ -15,6 +16,7 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     address public lockboxAddress;
     address payable public liqPool;
     address public transactionStorage;
+    address public omniVault;
 
     uint256 public constant MULTIPLIER = 1e18;
     uint256 public constant MAX_DIFF = 50000000000000000; // 0.05 * 1e18
@@ -23,6 +25,7 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     error RatioDifferenceTooHigh();
     error TransferToLockboxFailed();
     error InETHAddressNotSet();
+    error SettingZeroAddress();
     error LiquidityPoolNotSet();
 
     event ETHReceived(address sender, uint256 amount);
@@ -49,19 +52,28 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function setTransactionStorage(
         address _transactionStorage
     ) external onlyOwner {
+        require(_transactionStorage != address(0), SettingZeroAddress());
         transactionStorage = _transactionStorage;
     }
 
     function setInETHAddress(address _inETHAddress) external onlyOwner {
+        require(_inETHAddress != address(0), SettingZeroAddress());
         inETHAddress = _inETHAddress;
     }
 
     function setLockboxAddress(address _lockboxAddress) external onlyOwner {
+        require(_lockboxAddress != address(0), SettingZeroAddress());
         lockboxAddress = _lockboxAddress;
     }
 
     function setLiqPool(address payable _liqPool) external onlyOwner {
+        require(_liqPool != address(0), SettingZeroAddress());
         liqPool = _liqPool;
+    }
+
+    function setOmniVault(address payable _omniVault) external onlyOwner {
+        require(_omniVault != address(0), SettingZeroAddress());
+        omniVault = _omniVault;
     }
 
     function updateTreasuryData() public {
@@ -82,11 +94,13 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         uint256 l2Ratio = getRatioL2(totalL2InETH, total2ETH);
-        int256 ratioDiff = int256(l2Ratio) - int256(getRatio());
+        uint256 l1Ratio = omniVault.ratio();
+        // int256 ratioDiff = int256(l2Ratio) - int256(getRatio());
+        int256 ratioDiff = int256(l2Ratio) - int256(l1Ratio);
 
         require(
             !isAGreaterThanB(ratioDiff, int256(MAX_DIFF)),
-            RatioDifferenceTooHigh.selector
+            RatioDifferenceTooHigh()
         );
 
         uint256 _totalInETH = totalInETH();
@@ -106,13 +120,13 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if (inETHBalance > 0) {
             require(
                 IERC20(inETHAddress).transfer(lockboxAddress, inETHBalance),
-                TransferToLockboxFailed.selector
+                TransferToLockboxFailed()
             );
         }
     }
 
     function mintInceptionToken(uint256 _amountToMint) internal {
-        require(inETHAddress != address(0), InETHAddressNotSet.selector);
+        require(inETHAddress != address(0), InETHAddressNotSet());
         IERC20Mintable(inETHAddress).mint(_amountToMint);
     }
 
@@ -120,12 +134,12 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _amountToMint,
         address _receiver
     ) public {
-        require(inETHAddress != address(0), InETHAddressNotSet.selector);
+        require(inETHAddress != address(0), InETHAddressNotSet());
         IERC20Mintable(inETHAddress).mint(_amountToMint, _receiver);
     }
 
     function burnInceptionToken(uint256 _amountToBurn) internal {
-        require(inETHAddress != address(0), InETHAddressNotSet.selector);
+        require(inETHAddress != address(0), InETHAddressNotSet());
         IERC20Mintable(inETHAddress).burn(_amountToBurn);
     }
 
@@ -133,7 +147,7 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _amountToBurn,
         address _receiver
     ) public {
-        require(inETHAddress != address(0), InETHAddressNotSet.selector);
+        require(inETHAddress != address(0), InETHAddressNotSet());
         IERC20Mintable(inETHAddress).burn(_amountToBurn, _receiver);
     }
 
@@ -157,7 +171,7 @@ contract Rebalancer is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function getTotalDeposited() public view returns (uint256) {
-        require(liqPool != address(0), LiquidityPoolNotSet.selector);
+        require(liqPool != address(0), LiquidityPoolNotSet());
         return liqPool.balance;
     }
 

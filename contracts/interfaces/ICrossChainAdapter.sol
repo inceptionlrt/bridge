@@ -12,6 +12,7 @@ interface ICrossChainBridge {
     error FutureTimestamp();
     error NotAuthorizedByL2();
     error TransferToRebalancerFailed();
+    error SettingZeroAddress();
 
     event L2InfoReceived(
         uint256 indexed networkId,

@@ -26,18 +26,6 @@ contract CrossChainBridgeArbitrum is ICrossChainAdapter, Ownable {
         transactionStorage = TransactionStorage(_transactionStorage);
     }
 
-    function setRebalancer(address _rebalancer) external onlyOwner {
-        rebalancer = _rebalancer;
-    }
-
-    function setInboxArbitrum(address _inbox) external onlyOwner {
-        inboxArbitrum = _inbox;
-    }
-
-    function updateL2Target(address _l2Target) external onlyOwner {
-        l2Target = _l2Target;
-    }
-
     function receiveL2InfoArbitrum(
         uint256 _timestamp,
         uint256 _balance,
@@ -59,7 +47,23 @@ contract CrossChainBridgeArbitrum is ICrossChainAdapter, Ownable {
     }
 
     function setLiqPool(address payable _liqPool) external onlyOwner {
+        require(_liqPool != address(0), SettingZeroAddress());
         liqPool = _liqPool;
+    }
+
+    function setRebalancer(address _rebalancer) external onlyOwner {
+        require(_rebalancer != address(0), SettingZeroAddress());
+        rebalancer = _rebalancer;
+    }
+
+    function setInboxArbitrum(address _inbox) external onlyOwner {
+        require(_inbox != address(0), SettingZeroAddress());
+        inboxArbitrum = _inbox;
+    }
+
+    function updateL2Target(address _l2Target) external onlyOwner {
+        require(_l2Target != address(0), SettingZeroAddress());
+        l2Target = _l2Target;
     }
 
     receive() external payable {
