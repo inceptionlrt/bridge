@@ -6,9 +6,9 @@ import "@arbitrum/nitro-contracts/src/bridge/Inbox.sol";
 import "@arbitrum/nitro-contracts/src/bridge/Outbox.sol";
 import "hardhat/console.sol";
 
-import "./Rebalancer.sol";
 import "../interfaces/ICrossChainAdapter.sol";
-import "./TransactionStorage.sol";
+import "../rebalancer/Rebalancer.sol";
+import "../rebalancer/TransactionStorage.sol";
 
 contract CrossChainBridgeArbitrum is ICrossChainAdapter, Ownable {
     TransactionStorage public transactionStorage;

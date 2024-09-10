@@ -4,9 +4,9 @@ pragma solidity 0.8.26;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
-import "./Rebalancer.sol";
 import "../interfaces/ICrossChainAdapter.sol";
-import "./TransactionStorage.sol";
+import "../rebalancer/Rebalancer.sol";
+import "../rebalancer/TransactionStorage.sol";
 
 contract CrossChainBridgeOptimism is ICrossChainAdapter, Ownable {
     TransactionStorage public transactionStorage;
