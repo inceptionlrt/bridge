@@ -120,10 +120,10 @@ async function main() {
     const updatedLockboxInETHBalance = await inETH.balanceOf(lockboxAddress);
     console.log(`Updated Lockbox InETH Balance: ${ethers.formatUnits(updatedLockboxInETHBalance, 18)} InETH`);
 
-    // Use BigInt for final balance
+    // Print final balance, just in case
     const finalBalance: BigInt = BigInt(await deployer.provider!.getBalance(deployer.address));
     console.log(`Deployment completed. Gas spent: ${(initBalance - finalBalance).toString()}`);
-}
+} 
 
 main()
     .then(() => process.exit(0))
