@@ -18,6 +18,10 @@ module.exports = {
     hardhat: {},
     localhost: {
       url: "http://127.0.0.1:8545/",
+      forking: {
+        url: `${process.env.RPC_URL_HOLESKY}`,
+        blockNumber: 1442030,
+      },
     },
     ethereum: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],

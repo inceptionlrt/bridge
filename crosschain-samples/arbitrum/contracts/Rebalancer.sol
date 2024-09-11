@@ -41,22 +41,6 @@ contract Rebalancer is Ownable {
         inbox = IInbox(_inbox);
     }
 
-    /// @notice only l2Target can update greeting
-    function receiveL2Info(uint256 _balance, uint256 _totalSupply) public {
-        IBridge bridge = inbox.bridge();
-        // this prevents reentrancies on L2 to L1 txs
-        require(msg.sender == address(bridge), "NOT_BRIDGE");
-        IOutbox outbox = IOutbox(bridge.activeOutbox());
-        address l2Sender = outbox.l2ToL1Sender();
-        require(l2Sender == l2Target, "Rebalancer only updateable by L2");
-
-        l2TotalSupply = _totalSupply;
-        l2Balance = _balance;
-
-        //Omnivault mints additional +=_totalSupply tokens
-
-        emit L2InfoReceived(_totalSupply, _balance);
-    }
 
     /// @notice called by the Lockbox to update on withdraw
     function updateBalanceOnDeposit(
