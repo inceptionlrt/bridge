@@ -162,7 +162,7 @@ contract InceptionRatioFeed is
         emit RatioUpdated(token, oldRatio, ratio);
     }
 
-    function setRatioThreshold(uint256 newValue) external onlyOwner {
+    function setRatioThreshold(uint256 newValue) external  {
         if (newValue >= MAX_THRESHOLD || newValue == 0)
             revert NewRatioThresholdInvalid();
 
