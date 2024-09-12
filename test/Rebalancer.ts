@@ -94,12 +94,8 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
             const addChainTx = await transactionStorage.addChainId(chainId);
             await addChainTx.wait();
 
-
-
-            console.log("here1");
             // Call handleL2Info with test data
             const handleL2InfoTx = await transactionStorage.handleL2Info(chainId, timestamp, balance, totalSupply);
-            console.log("here2");
             await handleL2InfoTx.wait();
 
             console.log("TransactionStorage.handleL2Info() called.");
@@ -124,7 +120,7 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
 
             // Get the updated InETH balance of the Lockbox after calling updateTreasuryData()
             const updatedLockboxInETHBalance = await inETH.balanceOf(lockboxAddress);
-            console.log(`Updated Lockbox InETH Balance: ${ethers.formatUnits(updatedLockboxInETHBalance, 18)} InETH`);
+            expect(updatedLockboxInETHBalance).to.be.eq(800000000000000000000n);
 
             console.log("end!");
 
