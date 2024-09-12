@@ -79,15 +79,10 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
     describe("updateTreasuryData() Function", function () {
         it.only("Should update treasury data when L1 ratio - L2 ratio is lower than MAX_DIFF", async function () {
 
-            const { inETH, rebalancer, transactionStorage, crossChainAdapter, lockbox, restakingPool } = await loadFixture(deployContractsFixture);
+            const { inETH, rebalancer, transactionStorage, lockbox } = await loadFixture(deployContractsFixture);
             const lockboxAddress = await lockbox.getAddress();
-            // SCENARIO: Call TransactionStorage.handleL2Info() to update data
-            console.log("Calling TransactionStorage.handleL2Info() with test data...");
 
             const block = await ethers.provider.getBlock("latest");
-            // Extract and return the timestamp
-            console.log("Block timestamp:", block.timestamp);
-
             const chainId = 42161; // Example Chain ID (Arbitrum)
             const timestamp = block.timestamp - 10000000; // Timestamp needs to be in the past
             const balance = ethers.parseUnits("1000", 18); // Example balance: 1000 ETH
@@ -127,7 +122,6 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
             expect(updatedLockboxInETHBalance).to.be.eq(expectedLockboxBalance);
 
             console.log("end!");
-
         });
 
 
