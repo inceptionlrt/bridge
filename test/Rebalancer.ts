@@ -72,8 +72,6 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
         const assignMinterTx = await inETH.assignMinter(rebalancerAddress);
         await assignMinterTx.wait();
 
-        console.log("fixture end");
-
         return { inETH, rebalancer, crossChainAdapter, lockbox, restakingPool, transactionStorage, owner };
     }
 
@@ -120,7 +118,8 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
 
             // Get the updated InETH balance of the Lockbox after calling updateTreasuryData()
             const updatedLockboxInETHBalance = await inETH.balanceOf(lockboxAddress);
-            expect(updatedLockboxInETHBalance).to.be.eq(800000000000000000000n);
+            const expectedLockboxBalance = ethers.parseUnits("800");
+            expect(updatedLockboxInETHBalance).to.be.eq(expectedLockboxBalance);
 
             console.log("end!");
 
