@@ -13,15 +13,16 @@ require("./tasks/deploy-xerc20");
 require("./tasks/deploy-rate-provider");
 
 /** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
+const config: HardhatUserConfig = {
   networks: {
-    hardhat: {},
-    localhost: {
-      url: "http://127.0.0.1:8545/",
+    hardhat: {
       forking: {
         url: `${process.env.RPC_URL_HOLESKY}`,
         blockNumber: 1442030,
       },
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545/"
     },
     ethereum: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
@@ -135,3 +136,5 @@ module.exports = {
     ],
   },
 };
+
+export default config;

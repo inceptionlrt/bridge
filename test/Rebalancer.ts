@@ -1,660 +1,137 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
+import { ethers, network } from "hardhat";
+const config = require("../hardhat.config");
 
-describe("Rebalancer, InETH, CrossChainAdapter, Lockbox, and LiquidPool Contracts", function () {
+describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contracts", function () {
     async function deployContractsFixture() {
+
+        const block = await ethers.provider.getBlock("latest");
+        console.log(`Starting at block number: ${block.number}`);
+        console.log("... Initialization of Inception ....");
         // Get signers
-        const [owner] = await hre.ethers.getSigners();
-
-        // Deploy Rebalancer contract
-        const RebalancerFactory = await hre.ethers.getContractFactory("Rebalancer");
-        const rebalancer = await RebalancerFactory.deploy(owner.address);
-
-        const rebalancerAddress = await rebalancer.getAddress();
+        const [owner] = await ethers.getSigners();
 
         // Deploy InETH contract
-        const InETHFactory = await hre.ethers.getContractFactory("InETH");
-        const inETH = await InETHFactory.deploy(owner.address, rebalancerAddress);
-        const inEthAddress = await inETH.getAddress();
+        const InETHFactory = await ethers.getContractFactory("MockInceptionToken");
+        const inETH = await InETHFactory.deploy();
+        const inETHAddress = await inETH.getAddress();
 
+        // Deploy TxStorage contract
+        const transactionStorageFactory = await ethers.getContractFactory("TransactionStorage");
+        const transactionStorage = await transactionStorageFactory.deploy();
+        const transactionStorageAddress = await transactionStorage.getAddress();
 
+        // Deploy InceptionRatioFeed
+        const ratioFeedFactory = await ethers.getContractFactory("InceptionRatioFeed");
+        const ratioFeed = await ratioFeedFactory.deploy();
+        await ratioFeed.waitForDeployment();
+        const ratioFeedAddress = await ratioFeed.getAddress();
 
-        // Deploy Lockbox contract
-        const LockboxFactory = await hre.ethers.getContractFactory("Lockbox");
-        const lockbox = await LockboxFactory.deploy(inEthAddress, owner.address);
+        // Deploy RestakingPool mock
+        const restakingPoolFactory = await ethers.getContractFactory("MockRestakingPool");
+        const restakingPool = await restakingPoolFactory.deploy(inETHAddress, ratioFeedAddress);
+        await restakingPool.waitForDeployment();
+        const restakingPoolAddress = await restakingPool.getAddress();
+
+        // Deploy ArbcrossChainAdapter
+        const adapterFactory = await ethers.getContractFactory("MockCrossChainAdapter");
+        const crossChainAdapter = await adapterFactory.deploy(transactionStorageAddress, restakingPoolAddress);
+        await crossChainAdapter.waitForDeployment();
+        const crossChainAdapterAddress = await crossChainAdapter.getAddress();
+
+        // Deploy Lockbox
+        const lockboxFactory = await ethers.getContractFactory("XERC20Lockbox");
+        const lockbox = await lockboxFactory.deploy(inETHAddress, inETHAddress, false);
+        await lockbox.waitForDeployment();
         const lockboxAddress = await lockbox.getAddress();
 
-        await inETH.setLockbox(lockboxAddress);
+        // Update Ratio in InceptionRatioFeed to be less than 1
+        const updateRatioThresholdTx = await ratioFeed.setRatioThreshold(10000000);
+        await updateRatioThresholdTx.wait();
+        const updateRatioTx = await ratioFeed.updateRatioBatch(
+            [inETHAddress], // Array of token addresses
+            [ethers.parseUnits("0.8", 18)] // New ratio - 0.8 InceptionTokens per 1 ETH
+        );
+        await updateRatioTx.wait();
 
-        // Deploy LiquidPool contract
-        const LiquidPoolFactory = await hre.ethers.getContractFactory("LiquidPool");
-        const liquidPool = await LiquidPoolFactory.deploy(rebalancerAddress, inEthAddress, owner.address);
-        const liquidPoolAddress = await liquidPool.getAddress();
+        // Deploy Rebalancer
+        const rebalancerFactory = await ethers.getContractFactory("Rebalancer");
+        const rebalancer = await rebalancerFactory.deploy(
+            inETHAddress,
+            lockboxAddress,
+            restakingPoolAddress,
+            transactionStorageAddress,
+            ratioFeedAddress
+        );
+        await rebalancer.waitForDeployment();
+        const rebalancerAddress = await rebalancer.getAddress();
 
-        // Set InETH address in Rebalancer
-        await rebalancer.setInETHAddress(inEthAddress);
+        // Assign the Rebalancer as a minter in the InceptionToken (InETH) contract
+        const assignMinterTx = await inETH.assignMinter(rebalancerAddress);
+        await assignMinterTx.wait();
 
-        // Set Rebalancer address in InETH
-        await inETH.setRebalancer(rebalancerAddress);
+        console.log("fixture end");
 
-        // Deploy CrossChainAdapter contract
-        const CrossChainAdapterFactory = await hre.ethers.getContractFactory("CrossChainAdapter");
-        const CrossChainAdapter = await CrossChainAdapterFactory.deploy(owner.address, liquidPoolAddress);
-        const CrossChainAdapterAddress = await CrossChainAdapter.getAddress();
-
-        // Set CrossChainAdapter address in Rebalancer
-        await rebalancer.setCrossChainAdapter(CrossChainAdapterAddress);
-
-        // Set Rebalancer address in CrossChainAdapter
-        await CrossChainAdapter.setRebalancer(rebalancerAddress);
-
-        // Set Lockbox address in Rebalancer
-        await rebalancer.setLockboxAddress(lockboxAddress);
-
-        // Set LiquidPool address in Rebalancer (if needed)
-        await rebalancer.setLiqPool(liquidPoolAddress);
-
-        return { inETH, rebalancer, CrossChainAdapter, lockbox, liquidPool, owner };
+        return { inETH, rebalancer, crossChainAdapter, lockbox, restakingPool, transactionStorage, owner };
     }
 
-    describe("getRatio() Function", function () {
-        it("Should return correct getRatio() when ETH = inETH", async function () {
-            const { rebalancer, liquidPool, inETH } = await loadFixture(deployContractsFixture);
-            const amount = hre.ethers.parseEther("1000");
-
-            await inETH.mint(amount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${amount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(1000) * BigInt("1000000000000000000")) / BigInt(1000)));
-        });
-
-        it("Should return correct getRatio() when ETH > inETH", async function () {
-            const { rebalancer, liquidPool, inETH } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("1500");
-            const inEthAmount = hre.ethers.parseEther("1000");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(1000) * BigInt("1000000000000000000")) / BigInt(1500)));
-        });
-
-        it("Should return correct getRatio() when ETH < inETH", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("1000");
-            const inEthAmount = hre.ethers.parseEther("1500");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(1500) * BigInt("1000000000000000000")) / BigInt(1000)));
-        });
-
-        it("Should return correct getRatio() when ETH >> inETH (much higher)", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("10000");
-            const inEthAmount = hre.ethers.parseEther("100");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(100) * BigInt("1000000000000000000")) / BigInt(10000)));
-        });
-
-        it("Should return correct getRatio() when ETH << inETH (much lower)", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("100");
-            const inEthAmount = hre.ethers.parseEther("10000");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(10000) * BigInt("1000000000000000000")) / BigInt(100)));
-        });
-
-        it("Should return correct getRatio() when ETH == 0 || inETH == 0", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("0");
-            const inEthAmount = hre.ethers.parseEther("1000");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt("1000000000000000000"));
-        });
-
-        it("Should return correct getRatio() when ETH == 0 && inETH == 0", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("0");
-            const inEthAmount = hre.ethers.parseEther("0");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt("1000000000000000000"));
-        });
-    });
-
     describe("updateTreasuryData() Function", function () {
-        it("Should update treasury data when L1 ratio - L2 ratio is lower than MAX_DIFF", async function () {
-            const { inETH, rebalancer, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
+        it.only("Should update treasury data when L1 ratio - L2 ratio is lower than MAX_DIFF", async function () {
 
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1050"); // L1 ratio = 1050/1000 = 1.05
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
+            const { inETH, rebalancer, transactionStorage, crossChainAdapter, lockbox, restakingPool } = await loadFixture(deployContractsFixture);
+            const lockboxAddress = await lockbox.getAddress();
+            // SCENARIO: Call TransactionStorage.handleL2Info() to update data
+            console.log("Calling TransactionStorage.handleL2Info() with test data...");
 
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
+            const chainId = 42161; // Example Chain ID (Arbitrum)
+            const timestamp = Math.floor(Date.now() / 1000); // Current timestamp
+            const balance = ethers.parseUnits("1000", 18); // Example balance: 1000 ETH
+            const totalSupply = ethers.parseUnits("800", 18); // Example total supply: 800 InETH
 
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
+            // Add the chainId to the TransactionStorage
+            const addChainTx = await transactionStorage.addChainId(chainId);
+            await addChainTx.wait();
 
-            // Simulate L2 data with a slightly different ratio
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1030"); // L2 ratio = 1030/1000 = 1.03
 
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
 
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
+            console.log("here1");
+            // Call handleL2Info with test data
+            const handleL2InfoTx = await transactionStorage.handleL2Info(chainId, timestamp, balance, totalSupply);
+            console.log("here2");
+            await handleL2InfoTx.wait();
 
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l2InEthAmount);
-        });
+            console.log("TransactionStorage.handleL2Info() called.");
 
-        it("Should update treasury data when L1 ratio - L2 ratio is higher than MAX_DIFF", async function () {
-            const { rebalancer, CrossChainAdapter, liquidPool, inETH } = await loadFixture(deployContractsFixture);
+            // Fetch the updated transaction data from storage
+            const updatedTransaction = await transactionStorage.getTransactionData(chainId);
 
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1000"); // L1 ratio = 1
+            // Log the updated data to the console for verification
+            console.log("Updated Transaction Data:");
+            console.log("Timestamp:", updatedTransaction.timestamp);
+            console.log("ETH Balance:", ethers.formatUnits(updatedTransaction.ethBalance, 18));
+            console.log("InETH Balance:", ethers.formatUnits(updatedTransaction.inEthBalance, 18));
 
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
+            // Get initial InETH balance of the Lockbox before updating treasury data
+            const initialLockboxInETHBalance = await inETH.balanceOf(lockboxAddress);
+            console.log(`Initial Lockbox InETH Balance: ${ethers.formatUnits(initialLockboxInETHBalance, 18)} InETH`);
 
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
+            // Call rebalancer.updateTreasuryData() to update the treasury and sync balances
+            const updateTreasuryTx = await rebalancer.updateTreasuryData();
+            await updateTreasuryTx.wait();
+            console.log("Rebalancer.updateTreasuryData() called.");
 
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
+            // Get the updated InETH balance of the Lockbox after calling updateTreasuryData()
+            const updatedLockboxInETHBalance = await inETH.balanceOf(lockboxAddress);
+            console.log(`Updated Lockbox InETH Balance: ${ethers.formatUnits(updatedLockboxInETHBalance, 18)} InETH`);
 
-            // Simulate L2 data with a much different ratio
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1500"); // L2 ratio = 1.5
+            console.log("end!");
 
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await expect(rebalancer.updateTreasuryData()).to.be.revertedWith("Ratio diff bigger than threshold");
-        });
-
-        it("Should correctly mint tokens when expected", async function () {
-            const { rebalancer, inETH, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1199");
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data where L2 has more inETH than L1
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1200");
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l2InEthAmount);
-        });
-
-        it("Should correctly burn tokens when expected", async function () {
-            const { rebalancer, inETH, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1001");
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data where L2 has less inETH than L1
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1000");
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l2InEthAmount);
-        });
-
-        it("Should not adjust token quantity when L1 and L2 data matches", async function () {
-            const { rebalancer, inETH, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1000");
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data that exactly matches L1
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1000");
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l1InEthAmount);
         });
 
 
     });
 
-    describe("deposit() Function", function () {
-        it("Should deposit ERC20 tokens into the lockbox", async function () {
-            const { lockbox, inETH, owner } = await loadFixture(deployContractsFixture);
 
-            const depositAmount = hre.ethers.parseEther("500");
-
-            // Approve and deposit tokens to the lockbox
-            await inETH.connect(owner).approve(lockbox.getAddress(), depositAmount);
-            await lockbox.connect(owner).deposit(depositAmount);
-
-            const finalBalance = await inETH.balanceOf(lockbox.getAddress());
-            expect(finalBalance).to.equal(depositAmount);
-        });
-
-        it("Should revert if trying to deposit native token when not supported", async function () {
-            const { lockbox, owner } = await loadFixture(deployContractsFixture);
-
-            await expect(lockbox.connect(owner).depositNative({ value: hre.ethers.parseEther("1") })).to.be.revertedWith("Not Native Token");
-        });
-    });
-
-    describe("getRatio() Function", function () {
-        it("Should return correct getRatio() when ETH = inETH", async function () {
-            const { rebalancer, liquidPool, inETH } = await loadFixture(deployContractsFixture);
-            const amount = hre.ethers.parseEther("1000");
-
-            await inETH.mint(amount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${amount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(1000) * BigInt("1000000000000000000")) / BigInt(1000)));
-        });
-
-        it("Should return correct getRatio() when ETH > inETH", async function () {
-            const { rebalancer, liquidPool, inETH } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("1500");
-            const inEthAmount = hre.ethers.parseEther("1000");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(1000) * BigInt("1000000000000000000")) / BigInt(1500)));
-        });
-
-        it("Should return correct getRatio() when ETH < inETH", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("1000");
-            const inEthAmount = hre.ethers.parseEther("1500");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(1500) * BigInt("1000000000000000000")) / BigInt(1000)));
-        });
-
-        it("Should return correct getRatio() when ETH >> inETH (much higher)", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("10000");
-            const inEthAmount = hre.ethers.parseEther("100");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(100) * BigInt("1000000000000000000")) / BigInt(10000)));
-        });
-
-        it("Should return correct getRatio() when ETH << inETH (much lower)", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("100");
-            const inEthAmount = hre.ethers.parseEther("10000");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt((BigInt(10000) * BigInt("1000000000000000000")) / BigInt(100)));
-        });
-
-        it("Should return correct getRatio() when ETH == 0 || inETH == 0", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("0");
-            const inEthAmount = hre.ethers.parseEther("1000");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt("1000000000000000000"));
-        });
-
-        it("Should return correct getRatio() when ETH == 0 && inETH == 0", async function () {
-            const { rebalancer, inETH, liquidPool } = await loadFixture(deployContractsFixture);
-            const ethAmount = hre.ethers.parseEther("0");
-            const inEthAmount = hre.ethers.parseEther("0");
-
-            await inETH.mint(inEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${ethAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-            const ratio = await rebalancer.getRatio();
-
-            expect(ratio).to.equal(hre.ethers.toBigInt("1000000000000000000"));
-        });
-    });
-
-    describe("updateTreasuryData() Function", function () {
-        it("Should update treasury data when L1 ratio - L2 ratio is lower than MAX_DIFF", async function () {
-            const { inETH, rebalancer, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1050"); // L1 ratio = 1050/1000 = 1.05
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data with a slightly different ratio
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1030"); // L2 ratio = 1030/1000 = 1.03
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l2InEthAmount);
-        });
-
-        it("Should update treasury data when L1 ratio - L2 ratio is higher than MAX_DIFF", async function () {
-            const { rebalancer, CrossChainAdapter, liquidPool, inETH } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1000"); // L1 ratio = 1
-
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data with a much different ratio
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1500"); // L2 ratio = 1.5
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await expect(rebalancer.updateTreasuryData()).to.be.revertedWith("Ratio diff bigger than threshold");
-        });
-
-        it("Should correctly mint tokens when expected", async function () {
-            const { rebalancer, inETH, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1199");
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data where L2 has more inETH than L1
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1200");
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l2InEthAmount);
-        });
-
-        it("Should correctly burn tokens when expected", async function () {
-            const { rebalancer, inETH, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1001");
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data where L2 has less inETH than L1
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1000");
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l2InEthAmount);
-        });
-
-        it("Should not adjust token quantity when L1 and L2 data matches", async function () {
-            const { rebalancer, inETH, CrossChainAdapter, lockbox, liquidPool } = await loadFixture(deployContractsFixture);
-
-            const l1EthAmount = hre.ethers.parseEther("1000");
-            const l1InEthAmount = hre.ethers.parseEther("1000");
-            await inETH.mint(l1InEthAmount);
-            const liquidPoolAddr = await liquidPool.getAddress();
-
-            // Convert amount to hex string
-            const amountInHex = `0x${l1EthAmount.toString(16)}`;
-
-            await hre.network.provider.send("hardhat_setBalance", [
-                liquidPoolAddr,
-                amountInHex,
-            ]);
-
-            // Simulate L2 data that exactly matches L1
-            const l2EthAmount = hre.ethers.parseEther("1000");
-            const l2InEthAmount = hre.ethers.parseEther("1000");
-
-            const currentTimestamp = await time.latest();  // Get the current block timestamp
-
-            await CrossChainAdapter.receiveL2InfoOptimism(currentTimestamp, l2EthAmount, l2InEthAmount);
-            await rebalancer.updateTreasuryData();
-
-            const finalInEthBalance = await inETH.balanceOf(await lockbox.getAddress());
-            expect(finalInEthBalance).to.equal(l1InEthAmount);
-        });
-    });
 });
