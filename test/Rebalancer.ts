@@ -1,5 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import { log } from "console";
 import hre from "hardhat";
 import { ethers, network } from "hardhat";
 const config = require("../hardhat.config");
@@ -83,8 +84,12 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
             // SCENARIO: Call TransactionStorage.handleL2Info() to update data
             console.log("Calling TransactionStorage.handleL2Info() with test data...");
 
+            const block = await ethers.provider.getBlock("latest");
+            // Extract and return the timestamp
+            console.log("Block timestamp:", block.timestamp);
+
             const chainId = 42161; // Example Chain ID (Arbitrum)
-            const timestamp = Math.floor(Date.now() / 1000); // Current timestamp
+            const timestamp = block.timestamp - 10000000; // Timestamp needs to be in the past
             const balance = ethers.parseUnits("1000", 18); // Example balance: 1000 ETH
             const totalSupply = ethers.parseUnits("800", 18); // Example total supply: 800 InETH
 
