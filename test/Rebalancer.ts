@@ -1,8 +1,6 @@
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { log } from "console";
-import hre from "hardhat";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 const config = require("../hardhat.config");
 
 describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contracts", function () {

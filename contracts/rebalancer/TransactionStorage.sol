@@ -50,7 +50,7 @@ contract TransactionStorage {
         uint256 _balance,
         uint256 _totalSupply
     ) external {
-        // require(_timestamp <= block.timestamp, "Time cannot be in the future");
+        require(_timestamp <= block.timestamp, "Time cannot be in the future");
 
         Transaction memory lastUpdate = txs[chainId];
         if (lastUpdate.timestamp != 0) {
