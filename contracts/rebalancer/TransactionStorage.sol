@@ -24,7 +24,13 @@ contract TransactionStorage is Ownable {
         uint256 inEthBalance
     );
 
-    event AdapterAdded(uint256 indexed chainId, address adapterAddress); // Event for adding an adapter
+    event AdapterAdded(uint256 indexed chainId, address adapterAddress);
+    event AdapterReplaced(
+        uint256 indexed chainId,
+        address oldAdapterAddress,
+        address newAdapterAddress
+    );
+    error MsgNotFromAdapter(address caller);
 
     /**
      * @notice Add a new Chain ID to the storage
@@ -41,20 +47,24 @@ contract TransactionStorage is Ownable {
 
     /**
      * @notice Handle Layer 2 information and update transaction data
-     * @param chainId The Chain ID of the transaction
+     * @param _chainId The Chain ID of the transaction
      * @param _timestamp The timestamp of the transaction
      * @param _balance The balance of the transaction
      * @param _totalSupply The total supply for the transaction
      */
     function handleL2Info(
-        uint256 chainId,
+        uint256 _chainId,
         uint256 _timestamp,
         uint256 _balance,
         uint256 _totalSupply
     ) external {
         require(_timestamp <= block.timestamp, "Time cannot be in the future");
+        require(
+            msg.sender == adapters[_chainId],
+            MsgNotFromAdapter(msg.sender)
+        );
 
-        Transaction memory lastUpdate = txs[chainId];
+        Transaction memory lastUpdate = txs[_chainId];
         if (lastUpdate.timestamp != 0) {
             require(
                 _timestamp > lastUpdate.timestamp,
@@ -68,9 +78,9 @@ contract TransactionStorage is Ownable {
             inEthBalance: _totalSupply
         });
 
-        txs[chainId] = newUpdate;
+        txs[_chainId] = newUpdate;
 
-        emit L2InfoReceived(chainId, _timestamp, _balance, _totalSupply);
+        emit L2InfoReceived(_chainId, _timestamp, _balance, _totalSupply);
     }
 
     /**
@@ -108,5 +118,20 @@ contract TransactionStorage is Ownable {
         adapters[chainId] = adapterAddress;
 
         emit AdapterAdded(chainId, adapterAddress);
+    }
+
+    function replaceAdapter(
+        uint256 _chainId,
+        address _newAdapterAddress
+    ) external onlyOwner {
+        address prevAdapterAddress = adapters[_chainId];
+        require(
+            prevAdapterAddress != address(0),
+            "Adapter does not exist for this Chain ID"
+        );
+
+        adapters[_chainId] = _newAdapterAddress;
+
+        emit AdapterReplaced(_chainId, prevAdapterAddress, _newAdapterAddress);
     }
 }

@@ -40,6 +40,13 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
         await crossChainAdapter.waitForDeployment();
         const crossChainAdapterAddress = await crossChainAdapter.getAddress();
 
+        // Add the chainId to the TransactionStorage
+        const chainId = 42161; // Example Chain ID (Arbitrum)
+        const addChainTx = await transactionStorage.addChainId(chainId);
+        await addChainTx.wait();
+        const setAdapterTx = await transactionStorage.addAdapter(chainId, crossChainAdapterAddress);
+        await setAdapterTx.wait();
+
         // Deploy Lockbox
         const lockboxFactory = await ethers.getContractFactory("XERC20Lockbox");
         const lockbox = await lockboxFactory.deploy(inETHAddress, inETHAddress, false);
@@ -77,21 +84,20 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
     describe("updateTreasuryData() Function", function () {
         it.only("Should update treasury data when L1 ratio - L2 ratio is lower than MAX_DIFF", async function () {
 
-            const { inETH, rebalancer, transactionStorage, lockbox } = await loadFixture(deployContractsFixture);
+            const { inETH, rebalancer, transactionStorage, lockbox, owner } = await loadFixture(deployContractsFixture);
             const lockboxAddress = await lockbox.getAddress();
 
             const block = await ethers.provider.getBlock("latest");
-            
+
             const timestamp = block.timestamp - 10000000; // Timestamp needs to be in the past
             const balance = ethers.parseUnits("1000", 18); // Example balance: 1000 ETH
             const totalSupply = ethers.parseUnits("800", 18); // Example total supply: 800 InETH
-            
-            // Add the chainId to the TransactionStorage
-            const chainId = 42161; // Example Chain ID (Arbitrum)
-            const addChainTx = await transactionStorage.addChainId(chainId);
-            await addChainTx.wait();
 
             // Call handleL2Info with test data
+            const chainId = 42161; // Example Chain ID (Arbitrum)
+            const ownerAddress = await owner.getAddress();
+            const txAddAdpter = await transactionStorage.replaceAdapter(chainId, ownerAddress);
+            await txAddAdpter.wait();
             const handleL2InfoTx = await transactionStorage.handleL2Info(chainId, timestamp, balance, totalSupply);
             await handleL2InfoTx.wait();
 

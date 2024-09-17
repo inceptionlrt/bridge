@@ -20,6 +20,12 @@ const config: HardhatUserConfig = {
         url: `${process.env.RPC_URL_HOLESKY}`,
         blockNumber: 1442030,
       },
+      mining: {
+        auto: true,
+      },
+      blockGasLimit: 12000000,  // Increase block gas limit
+      gas: 'auto',  // Automatically estimate gas
+      gasPrice: 'auto',  // Automatically estimate gas price
     },
     localhost: {
       url: "http://127.0.0.1:8545/"
