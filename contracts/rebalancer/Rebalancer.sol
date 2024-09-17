@@ -141,20 +141,9 @@ contract Rebalancer is Initializable, OwnableUpgradeable {
         IERC20Mintable(inETHAddress).burn(_receiver, _amountToBurn);
     }
 
-    function getRatio() public view returns (uint256) {
-        uint256 totalDeposited = getTotalDeposited();
-        uint256 totalSupply = IERC20(inETHAddress).totalSupply();
-        uint256 denominator = totalDeposited < totalAmountToWithdraw
-            ? 0
-            : totalDeposited - totalAmountToWithdraw;
-
-        if (denominator == 0 || totalSupply == 0) return 1e18;
-
-        return (totalSupply * MULTIPLIER) / denominator;
-    }
-
     function getRatioL1() internal view returns (uint256) {
-        return IInceptionRatioFeed(ratioFeed).getRatioFor(address(inETHAddress));
+        return
+            IInceptionRatioFeed(ratioFeed).getRatioFor(address(inETHAddress));
     }
 
     function getRatioL2(
@@ -186,5 +175,11 @@ contract Rebalancer is Initializable, OwnableUpgradeable {
     receive() external payable {
         IRestakingPool lp = IRestakingPool(liqPool);
         lp.deposit{value: msg.value}();
+
+        //transferring all received inETH to Lockbox
+        uint256 localInEthBalance = IERC20(inETHAddress).balanceOf(
+            address(this)
+        );
+        IERC20(inETHAddress).transfer(lockboxAddress, localInEthBalance);
     }
 }

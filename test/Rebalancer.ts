@@ -81,12 +81,13 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
             const lockboxAddress = await lockbox.getAddress();
 
             const block = await ethers.provider.getBlock("latest");
-            const chainId = 42161; // Example Chain ID (Arbitrum)
+            
             const timestamp = block.timestamp - 10000000; // Timestamp needs to be in the past
             const balance = ethers.parseUnits("1000", 18); // Example balance: 1000 ETH
             const totalSupply = ethers.parseUnits("800", 18); // Example total supply: 800 InETH
-
+            
             // Add the chainId to the TransactionStorage
+            const chainId = 42161; // Example Chain ID (Arbitrum)
             const addChainTx = await transactionStorage.addChainId(chainId);
             await addChainTx.wait();
 

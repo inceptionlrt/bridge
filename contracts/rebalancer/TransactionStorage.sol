@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "./Rebalancer.sol";
 import "../interfaces/ICrossChainAdapter.sol";
 
-contract TransactionStorage {
+contract TransactionStorage is Ownable {
     struct Transaction {
         uint256 timestamp;
         uint256 ethBalance;
@@ -95,7 +97,10 @@ contract TransactionStorage {
      * @param chainId The Chain ID associated with the adapter
      * @param adapterAddress The address of the adapter to add
      */
-    function addAdapter(uint256 chainId, address adapterAddress) external {
+    function addAdapter(
+        uint256 chainId,
+        address adapterAddress
+    ) external onlyOwner {
         require(
             adapters[chainId] == address(0),
             "Adapter already exists for this Chain ID"
