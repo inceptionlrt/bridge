@@ -121,26 +121,10 @@ contract Rebalancer is Initializable, OwnableUpgradeable {
         pool.mint(lockboxAddress, _amountToMint);
     }
 
-    function mintInceptionToken(
-        uint256 _amountToMint,
-        address _receiver
-    ) public {
-        require(inETHAddress != address(0), InETHAddressNotSet());
-        IERC20Mintable(inETHAddress).mint(_receiver, _amountToMint);
-    }
-
     function burnInceptionToken(uint256 _amountToBurn) internal {
         require(inETHAddress != address(0), InETHAddressNotSet());
         IRestakingPool pool = IRestakingPool(liqPool);
         pool.burn(lockboxAddress, _amountToBurn);
-    }
-
-    function burnInceptionToken(
-        uint256 _amountToBurn,
-        address _receiver
-    ) public {
-        require(inETHAddress != address(0), InETHAddressNotSet());
-        IERC20Mintable(inETHAddress).burn(_receiver, _amountToBurn);
     }
 
     function getRatioL1() internal view returns (uint256) {
