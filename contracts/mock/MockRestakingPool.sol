@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "../interfaces/IRestakingPool.sol";
 import "../interfaces/IInceptionToken.sol";
 import "../interfaces/IInceptionRatioFeed.sol";
 
-contract MockRestakingPool is IRestakingPool {
+contract MockRestakingPool is IRestakingPool, Ownable {
     IInceptionToken public inETH;
     IInceptionRatioFeed public ratioFeed;
+    address public rebalancer;
 
     /**
      * @dev Constructor that initializes the contract with inETH token address and ratio feed address
@@ -19,6 +22,13 @@ contract MockRestakingPool is IRestakingPool {
         require(_ratioFeed != address(0), "PoolZeroAddress");
         inETH = IInceptionToken(_inETH);
         ratioFeed = IInceptionRatioFeed(_ratioFeed);
+    }
+
+    error CallerIsNotLockbox();
+
+    modifier onlyRebalancer() {
+        require(msg.sender == rebalancer, CallerIsNotLockbox());
+        _;
     }
 
     /**
@@ -37,6 +47,18 @@ contract MockRestakingPool is IRestakingPool {
         inETH.mint(msg.sender, amountToMint);
 
         emit Received(msg.sender, msg.value);
+    }
+
+    function setRebalancer(address _rebalancer) external onlyOwner {
+        rebalancer = _rebalancer;
+    }
+
+    function mint(address _receiver, uint256 _amount) external onlyRebalancer {
+        inETH.mint(_receiver, _amount);
+    }
+
+    function burn(address _receiver, uint256 _amount) external onlyRebalancer {
+        inETH.burn(_receiver, _amount);
     }
 
     // Mock functions to satisfy the IRestakingPool interface

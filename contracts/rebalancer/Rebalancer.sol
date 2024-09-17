@@ -117,7 +117,8 @@ contract Rebalancer is Initializable, OwnableUpgradeable {
 
     function mintInceptionToken(uint256 _amountToMint) internal {
         require(inETHAddress != address(0), InETHAddressNotSet());
-        IERC20Mintable(inETHAddress).mint(lockboxAddress, _amountToMint);
+        IRestakingPool pool = IRestakingPool(liqPool);
+        pool.mint(lockboxAddress, _amountToMint);
     }
 
     function mintInceptionToken(
@@ -130,7 +131,8 @@ contract Rebalancer is Initializable, OwnableUpgradeable {
 
     function burnInceptionToken(uint256 _amountToBurn) internal {
         require(inETHAddress != address(0), InETHAddressNotSet());
-        IERC20Mintable(inETHAddress).burn(lockboxAddress, _amountToBurn);
+        IRestakingPool pool = IRestakingPool(liqPool);
+        pool.burn(lockboxAddress, _amountToBurn);
     }
 
     function burnInceptionToken(

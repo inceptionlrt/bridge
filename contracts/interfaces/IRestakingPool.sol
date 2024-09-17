@@ -116,6 +116,13 @@ interface IRestakingPool {
 
     event TargetCapacityChanged(uint256 prevValue, uint256 newValue);
 
+    function rebalancer() external view returns (address rebalancer);
+    function setRebalancer(address _rebalancer) external;
+
+    function mint(address _receiver, uint256 _amount) external;
+
+    function burn(address _receiver, uint256 _amount) external;
+
     /* functions */
 
     function getMinStake() external view returns (uint256);

@@ -73,9 +73,12 @@ describe("Rebalancer, InETH, crossChainAdapter, Lockbox, and LiquidPool Contract
         );
         await rebalancer.waitForDeployment();
         const rebalancerAddress = await rebalancer.getAddress();
+        const txSetRebalancerToPool = await restakingPool.setRebalancer(rebalancerAddress);
+        await txSetRebalancerToPool.wait();
 
-        // Assign the Rebalancer as a minter in the InceptionToken (InETH) contract
-        const assignMinterTx = await inETH.assignMinter(rebalancerAddress);
+
+        // Assign the restakingPool as a minter in the InceptionToken (InETH) contract
+        const assignMinterTx = await inETH.assignMinter(restakingPoolAddress);
         await assignMinterTx.wait();
 
         return { inETH, rebalancer, crossChainAdapter, lockbox, restakingPool, transactionStorage, owner };
