@@ -2,11 +2,12 @@
 pragma solidity ^0.8.20;
 
 import "../interfaces/IXERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
+contract XERC20 is Initializable, ERC20Upgradeable, OwnableUpgradeable, IXERC20, ERC20PermitUpgradeable {
     /**
      * @notice The duration it takes for the limits to fully replenish
      */
@@ -15,7 +16,7 @@ contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
     /**
      * @notice The address of the factory which deployed this contract
      */
-    address public immutable FACTORY;
+    address public FACTORY;
 
     /**
      * @notice The address of the lockbox contract
@@ -27,16 +28,25 @@ contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
      */
     mapping(address => Bridge) public bridges;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() payable {
+        _disableInitializers();
+    }
+
     /**
      * @param _name The name of the token
      * @param _symbol The symbol of the token
      * @param _factory The factory which deployed this contract
      */
-    constructor(
+    function initialize(
         string memory _name,
         string memory _symbol,
         address _factory
-    ) ERC20(_name, _symbol) ERC20Permit(_name) {
+    ) external initializer {
+        __ERC20_init(_name, _symbol);
+        __Ownable_init();
+        __ERC20Permit_init(_name);
+
         _transferOwnership(_factory);
         FACTORY = _factory;
     }

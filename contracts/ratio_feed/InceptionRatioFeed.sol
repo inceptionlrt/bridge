@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "../interfaces/IInceptionRatioFeed.sol";
 
 /// @author The InceptionLRT team
@@ -40,7 +40,7 @@ contract InceptionRatioFeed is
     }
 
     function initialize(address operator) external initializer {
-        __Ownable_init(msg.sender);
+        __Ownable_init();
         __Pausable_init();
 
         inceptionOperator = operator;
