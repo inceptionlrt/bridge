@@ -12,8 +12,8 @@ const abiCoder = require("web3-eth-abi");
 let tx;
 
 async function bridgeInit(initialOwner, operatorAddress) {
-  const methodId = abiCoder.encodeFunctionSignature("initialize(address,address)");
-  const params = abiCoder.encodeParameters(["address", "address"], [initialOwner, operatorAddress]);
+  const methodId = abiCoder.encodeFunctionSignature("initialize(address)");
+  const params = abiCoder.encodeParameters(["address"], [operatorAddress]);
   return methodId + params.substr(2);
 }
 
