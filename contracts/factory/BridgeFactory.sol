@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "solmate/src/utils/CREATE3.sol";
-import "../XERC20/XERC20.sol";
-import "../XERC20/XERC20Lockbox.sol";
+import "../proxy/InitializableTransparentUpgradeableProxy.sol";
+import "../interfaces/IOwnable.sol";
 import "../interfaces/IFactory.sol";
 
 /// @author The InceptionLRT team
@@ -113,10 +113,10 @@ contract BridgeFactory is IFactory {
             (_isNative && _baseToken != address(0))
         ) revert IXERC20Factory_BadTokenAddress();
 
-        if (XERC20(_xerc20).owner() != msg.sender)
+        if (IOwnable(_xerc20).owner() != msg.sender)
             revert IXERC20Factory_NotOwner();
 
-        _lockbox = _deployLockbox(_xerc20, _baseToken, _isNative);
+        _lockbox = _deployLockbox(_xerc20, _baseToken);
 
         emit LockboxDeployed(_lockbox);
     }
@@ -134,15 +134,12 @@ contract BridgeFactory is IFactory {
     ) internal returns (address _xerc20) {
         address deployer = msg.sender;
         bytes32 _salt = keccak256(abi.encodePacked(_name, _symbol, deployer));
-        bytes memory _creation = type(XERC20).creationCode;
+        bytes memory _creation = type(InitializableTransparentUpgradeableProxy).creationCode;
         bytes memory _bytecode = abi.encodePacked(
-            _creation,
-            abi.encode(_name, _symbol, address(this))
+            _creation
         );
 
         _xerc20 = CREATE3.deploy(_salt, _bytecode, 0);
-
-        XERC20(_xerc20).transferOwnership(deployer);
     }
 
     /**
@@ -151,26 +148,21 @@ contract BridgeFactory is IFactory {
      * @dev When deploying a lockbox for the gas token of the chain, then, the base token needs to be address(0)
      * @param _xerc20 The address of the xerc20 that you want to deploy a lockbox for
      * @param _baseToken The address of the base token that you want to lock
-     * @param _isNative Whether or not the base token is the native (gas) token of the chain. Eg: MATIC for polygon chain
      * @return _lockbox The address of the lockbox
      */
     function _deployLockbox(
         address _xerc20,
-        address _baseToken,
-        bool _isNative
+        address _baseToken
     ) internal returns (address _lockbox) {
         address deployer = msg.sender;
         bytes32 _salt = keccak256(
             abi.encodePacked(_xerc20, _baseToken, deployer)
         );
         bytes memory _bytecode = abi.encodePacked(
-            type(XERC20Lockbox).creationCode,
-            abi.encode(_xerc20, _baseToken, _isNative)
+            type(InitializableTransparentUpgradeableProxy).creationCode
         );
 
         _lockbox = CREATE3.deploy(_salt, _bytecode, 0);
-
-        XERC20(_xerc20).setLockbox(_lockbox);
     }
 
     function deployCreate3(
@@ -188,5 +180,27 @@ contract BridgeFactory is IFactory {
 
         emit ContractCreated(addr);
         return addr;
+    }
+
+    function getDeploymentCreate3XERC20Address(
+        string memory _name,
+        string memory _symbol,
+        address _deployer
+    ) external view returns (address _address) {
+        _address = CREATE3.getDeployed(keccak256(abi.encodePacked(_name, _symbol, _deployer)));
+    }
+    
+    function getDeploymentCreate3LockboxAddress(
+        address _xerc20,
+        address _baseToken,
+        address _deployer
+    ) external view returns (address _address) {
+        _address = CREATE3.getDeployed(keccak256(abi.encodePacked(_xerc20, _baseToken, _deployer)));
+    }
+
+    function getDeploymentCreate3Address(
+        bytes32 _salt
+    ) external view returns (address _address) {
+        _address = CREATE3.getDeployed(_salt);
     }
 }

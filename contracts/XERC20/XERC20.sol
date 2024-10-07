@@ -47,7 +47,6 @@ contract XERC20 is Initializable, ERC20Upgradeable, OwnableUpgradeable, IXERC20,
         __Ownable_init();
         __ERC20Permit_init(_name);
 
-        _transferOwnership(_factory);
         FACTORY = _factory;
     }
 
@@ -75,8 +74,7 @@ contract XERC20 is Initializable, ERC20Upgradeable, OwnableUpgradeable, IXERC20,
      * @notice Sets the lockbox address
      * @param _lockbox The address of the lockbox
      */
-    function setLockbox(address _lockbox) external {
-        if (msg.sender != FACTORY) revert IXERC20_NotFactory();
+    function setLockbox(address _lockbox) external onlyOwner {
         lockbox = _lockbox;
 
         emit LockboxSet(_lockbox);
