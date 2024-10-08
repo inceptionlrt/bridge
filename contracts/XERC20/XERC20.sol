@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../interfaces/IXERC20.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ERC20Upgradeable} from "openzeppelin-4-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "openzeppelin-4-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import "openzeppelin-4-upgradeable/access/OwnableUpgradeable.sol";
+import "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
-contract XERC20 is Initializable, ERC20Upgradeable, OwnableUpgradeable, IXERC20, ERC20PermitUpgradeable {
+import "../interfaces/IXERC20.sol";
+
+contract XERC20 is
+    Initializable,
+    ERC20Upgradeable,
+    OwnableUpgradeable,
+    ERC20PermitUpgradeable,
+    IXERC20
+{
     /**
      * @notice The duration it takes for the limits to fully replenish
      */
@@ -30,7 +37,7 @@ contract XERC20 is Initializable, ERC20Upgradeable, OwnableUpgradeable, IXERC20,
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() payable {
-        _disableInitializers();
+        //_do();
     }
 
     /**
