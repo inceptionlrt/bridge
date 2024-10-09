@@ -2,6 +2,7 @@ const abiCoder = require("web3-eth-abi");
 const XERC_TEMPLATE_PATH = "./tasks/templates/xerc20.json";
 
 let factoryAddress, deployer;
+let proxyAdminAddress;
 
 task("deploy-xerc20", "it deploys the set of XERC20 contracts")
   .addParam("execute", "whether deploy contracts or not (1 / 0)")
@@ -27,6 +28,7 @@ task("deploy-xerc20", "it deploys the set of XERC20 contracts")
 
     const configTemplate = await readJson(XERC_TEMPLATE_PATH);
     const deployData = await generateCalldata(configTemplate);
+ 
     if (execute == "0") {
       console.log(deployData);
     } else {
@@ -92,52 +94,57 @@ async function deployXERC20(xERC20Config) {
 
   const proxyAdmin = await ethers.deployContract("ProxyAdmin");
   await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
+  
+  let XERC20SALT = ethers.solidityPackedKeccak256(["string", "string", "address"], [xERC20Config.tokenName, xERC20Config.tokenSymbol, await deployer.getAddress()]);
+  let BYTECODE = ethers.solidityPacked(["bytes"], [ProxyFactory.bytecode]);
 
-  let tx = await factory.deployXERC20(xERC20Config.tokenName, xERC20Config.tokenSymbol);
+  let tx = await factory.deployCreate3(BYTECODE, XERC20SALT);
   const receipt = await tx.wait();
-  let event = receipt.logs.find((e) => e.eventName === "XERC20Deployed");
+  let event = receipt.logs.find((e) => e.eventName === "ContractCreated");
 
-  let xERC20Address = await factory.getDeploymentCreate3XERC20Address(xERC20Config.tokenName, xERC20Config.tokenSymbol, deployer.getAddress());
-  console.log("Expected Address: " + xERC20Address);
+  console.log("Expected Address: " + event.args.addr);
 
   const calldata = await xERC20Calldata(xERC20Config.tokenName, xERC20Config.tokenSymbol)
-  const proxy = ProxyFactory.attach(xERC20Address);
+  const proxy = ProxyFactory.attach(event.args.addr);
   tx = await proxy.initialize(xERC20ImpAddr, proxyAdminAddress, calldata);
   await tx.wait();
 
-  return event.args._xerc20;
+  return event.args.addr;
 }
 
-async function deployLockBox(xERC20Address,baseTokenAddress) {
+async function deployLockBox(xERC20Address, baseTokenAddress) {
   console.log("... Deploying Lockbox ...");
 
   const lockboxImpAddr = await deployLockboxImp();
   const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
 
-  const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
+  // await proxyAdmin.waitForDeployment();
+  // const proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
 
-  let tx = await factory.deployLockbox(xERC20Address, baseTokenAddress, false);
+  let LOCKBOXSALT = ethers.solidityPackedKeccak256(["address", "address", "address"], [xERC20Address, baseTokenAddress, await deployer.getAddress()]);
+  let BYTECODE = ethers.solidityPacked(["bytes"], [ProxyFactory.bytecode]);
+
+  let isNative = false;
+  let tx = await factory.deployCreate3(BYTECODE, LOCKBOXSALT);
   const receipt = await tx.wait();
-  const event = receipt.logs.find((e) => e.eventName === "LockboxDeployed");
+  const event = receipt.logs.find((e) => e.eventName === "ContractCreated");
 
-  let lockboxAddress = await factory.getDeploymentCreate3LockboxAddress(xERC20Address, baseTokenAddress, deployer.getAddress());
-  console.log("Expected Address: " + lockboxAddress);
+  console.log("Expected Address: " + event.args.addr);
 
-  const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, false);
-  const proxy = ProxyFactory.attach(lockboxAddress);
+  const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, isNative);
+  const proxy = ProxyFactory.attach(event.args.addr);
   tx = await proxy.initialize(lockboxImpAddr, proxyAdminAddress, calldata);
   await tx.wait();
 
-  return event.args._lockbox;
+  return event.args.addr;
 }
 
 async function setAllowances(xerc20Address, bridgeAddress, config) {
@@ -159,7 +166,10 @@ async function setAllowances(xerc20Address, bridgeAddress, config) {
 
 const generateCalldata = async (configFile) => {
   const config = require("dotenv").config();
-  const originTokenAddress = config.parsed.ORIGIN_TOKEN_ADDRESS;
+  let originTokenAddress;
+  if (hre.network.name == "ethereum") {
+    originTokenAddress = config.parsed.ORIGIN_TOKEN_ADDRESS;
+  }
   if (originTokenAddress == "") {
     console.error("origin token address is null");
   }
@@ -181,3 +191,4 @@ const generateCalldata = async (configFile) => {
     tokenSymbol: configFile.tokenSymbol,
   };
 };
+ 

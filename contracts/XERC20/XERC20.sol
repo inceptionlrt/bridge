@@ -6,7 +6,7 @@ import {ERC20PermitUpgradeable} from "openzeppelin-4-upgradeable/token/ERC20/ext
 import {OwnableUpgradeable} from "openzeppelin-4-upgradeable/access/OwnableUpgradeable.sol";
 import {Initializable} from "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
-import "../interfaces/IXERC20.sol";
+import {IXERC20} from "../interfaces/IXERC20.sol";
 
 /// @author The InceptionLRT team
 /// @title The InceptionBridge contract
@@ -37,6 +37,11 @@ contract XERC20 is
      */
     mapping(address => Bridge) public bridges;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() payable {
+        //_do();
+    }
+    
     /**
      * @param _name The name of the token
      * @param _symbol The symbol of the token

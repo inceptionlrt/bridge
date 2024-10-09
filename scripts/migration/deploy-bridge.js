@@ -12,8 +12,8 @@ const abiCoder = require("web3-eth-abi");
 let tx;
 
 async function bridgeInit(initialOwner, operatorAddress) {
-  const methodId = abiCoder.encodeFunctionSignature("initialize(address)");
-  const params = abiCoder.encodeParameters(["address"], [operatorAddress]);
+  const methodId = abiCoder.encodeFunctionSignature("initialize(address,address)");
+  const params = abiCoder.encodeParameters(["address", "address"], [initialOwner, operatorAddress]);
   return methodId + params.substr(2);
 }
 
@@ -57,6 +57,11 @@ async function deployBridge(implementationAddress, factoryAddress, notaryAddress
   const proxyBytecode = ProxyFactory.bytecode;
   const proxyAddress = (await factory.getDeploymentCreate2Address(proxyBytecode, await deployer.getAddress())).toString();
   console.log(`Bridge Proxy address: ${proxyAddress}`);
+
+  if (proxyAddress.toString() != "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac") {
+    console.error("WRONG BRIDGE ADDRESS");
+    return;
+  }
 
   tx = await factory.deployCreate2(proxyBytecode);
   await tx.wait();

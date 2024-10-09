@@ -5,8 +5,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Initializable} from "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
-import "../interfaces/IXERC20Lockbox.sol";
-import "../interfaces/IXERC20.sol";
+import {IXERC20Lockbox} from "../interfaces/IXERC20Lockbox.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IXERC20} from "../interfaces/IXERC20.sol";
 
 /// @author The InceptionLRT team
 /// @title The InceptionBridge contract
@@ -29,6 +30,11 @@ contract XERC20Lockbox is IXERC20Lockbox, Initializable {
      */
     bool public IS_NATIVE;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() payable {
+        //_do();
+    }
+    
     /**
      * @param _xerc20 The address of the XERC20 contract
      * @param _erc20 The address of the ERC20 contract
