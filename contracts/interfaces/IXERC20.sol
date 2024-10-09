@@ -8,6 +8,11 @@ interface IERC20Errors {
     error IXERC20_NotHighEnoughLimits();
 
     /**
+     * @notice Reverts when caller is not the factory
+     */
+    error IXERC20_NotFactory();
+
+    /**
      * @notice Reverts when caller sets too small _limit
      */
     error IXERC20_WrongBridgeLimit();
