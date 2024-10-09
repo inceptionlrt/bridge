@@ -168,7 +168,10 @@ async function setAllowances(xerc20Address, bridgeAddress, config) {
 
 const generateCalldata = async (configFile) => {
   const config = require("dotenv").config();
-  const originTokenAddress = config.parsed.ORIGIN_TOKEN_ADDRESS;
+  let originTokenAddress;
+  if (hre.network.name == "ethereum") {
+    originTokenAddress = config.parsed.ORIGIN_TOKEN_ADDRESS;
+  }
   if (originTokenAddress == "") {
     console.error("origin token address is null");
   }

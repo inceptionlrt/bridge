@@ -10,7 +10,8 @@ const deployFactory = async () => {
   console.log("###################### Factory deployment #######################");
   console.log("##################################################################\n");
 
-  const [deployer] = await ethers.getSigners();
+  const [normalDeployer, deployer] = await ethers.getSigners(); 
+
   await printBalance(deployer);
 
   if ((await deployer.getNonce()).toString() != DEPLOYER_NONCE) {

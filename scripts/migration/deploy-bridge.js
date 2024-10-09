@@ -56,6 +56,12 @@ async function deployBridge(implementationAddress, factoryAddress, notaryAddress
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
   const proxyBytecode = ProxyFactory.bytecode;
   const proxyAddress = (await factory.getDeploymentCreate2Address(proxyBytecode, await deployer.getAddress())).toString();
+
+  if (proxyAddress.toString() != "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac") {
+    console.error("WRONG BRIDGE ADDRESS");
+    return;
+  }
+
   console.log(`Bridge Proxy address: ${proxyAddress}`);
 
   tx = await factory.deployCreate2(proxyBytecode);
