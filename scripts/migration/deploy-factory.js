@@ -23,7 +23,8 @@ const deployFactory = async () => {
     return;
   }
 
-  const factory = await ethers.deployContract("BridgeFactory");
+  const Factory = await ethers.getContractFactory("BridgeFactory");
+  const factory = await Factory.connect(deployer).deploy();
   await factory.waitForDeployment();
 
   const factoryAddress = await factory.getAddress();
