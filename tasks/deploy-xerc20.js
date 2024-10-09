@@ -2,6 +2,7 @@ const abiCoder = require("web3-eth-abi");
 const XERC_TEMPLATE_PATH = "./tasks/templates/xerc20.json";
 
 let factoryAddress, deployer;
+let proxyAdminAddress;
 
 task("deploy-xerc20", "it deploys the set of XERC20 contracts")
   .addParam("execute", "whether deploy contracts or not (1 / 0)")
@@ -92,7 +93,7 @@ async function deployXERC20(xERC20Config) {
 
   const proxyAdmin = await ethers.deployContract("ProxyAdmin");
   await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
@@ -118,21 +119,22 @@ async function deployLockBox(xERC20Address,baseTokenAddress) {
   const lockboxImpAddr = await deployLockboxImp();
   const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
 
-  const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
+  // await proxyAdmin.waitForDeployment();
+  // const proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
 
-  let tx = await factory.deployLockbox(xERC20Address, baseTokenAddress, false);
+  let isNative = false;
+  let tx = await factory.deployLockbox(xERC20Address, baseTokenAddress, isNative);
   const receipt = await tx.wait();
   const event = receipt.logs.find((e) => e.eventName === "LockboxDeployed");
 
   let lockboxAddress = await factory.getDeploymentCreate3LockboxAddress(xERC20Address, baseTokenAddress, deployer.getAddress());
   console.log("Expected Address: " + lockboxAddress);
 
-  const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, false);
+  const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, isNative);
   const proxy = ProxyFactory.attach(lockboxAddress);
   tx = await proxy.initialize(lockboxImpAddr, proxyAdminAddress, calldata);
   await tx.wait();

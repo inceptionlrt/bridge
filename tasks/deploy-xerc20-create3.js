@@ -2,6 +2,7 @@ const abiCoder = require("web3-eth-abi");
 const XERC_TEMPLATE_PATH = "./tasks/templates/xerc20.json";
 
 let factoryAddress, deployer;
+let proxyAdminAddress;
 
 task("deploy-xerc20-create3", "it deploys the set of XERC20 contracts")
   .addParam("execute", "whether deploy contracts or not (1 / 0)")
@@ -27,11 +28,6 @@ task("deploy-xerc20-create3", "it deploys the set of XERC20 contracts")
 
     const configTemplate = await readJson(XERC_TEMPLATE_PATH);
     const deployData = await generateCalldata(configTemplate);
-
-    // let XERC20SALT = ethers.solidityPackedKeccak256(["string", "string", "address"], [deployData.tokenName, deployData.tokenSymbol, await deployer.getAddress()]);
-    // let LOCKBOXSALT = ethers.solidityPackedKeccak256(["address", "address", "address"], ["0xB0ac36a886d6638c870Aa1f18aE747AaBD4FbD91", "0xdF57D49D8713A1A15df4d54d7fe29680b25A1239", await deployer.getAddress()]);
-    // const Fac = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
-    // let PROXYSALT = ethers.solidityPacked(["bytes"], [Fac.bytecode]);
  
     if (execute == "0") {
       console.log(deployData);
@@ -98,7 +94,7 @@ async function deployXERC20(xERC20Config) {
 
   const proxyAdmin = await ethers.deployContract("ProxyAdmin");
   await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
@@ -127,9 +123,9 @@ async function deployLockBox(xERC20Address, baseTokenAddress) {
   const lockboxImpAddr = await deployLockboxImp();
   const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
 
-  const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
+  // await proxyAdmin.waitForDeployment();
+  // const proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
@@ -137,6 +133,7 @@ async function deployLockBox(xERC20Address, baseTokenAddress) {
   let LOCKBOXSALT = ethers.solidityPackedKeccak256(["address", "address", "address"], [xERC20Address, baseTokenAddress, await deployer.getAddress()]);
   let BYTECODE = ethers.solidityPacked(["bytes"], [ProxyFactory.bytecode]);
 
+  let isNative = false;
   let tx = await factory.deployCreate3(BYTECODE, LOCKBOXSALT);
   const receipt = await tx.wait();
   const event = receipt.logs.find((e) => e.eventName === "ContractCreated");
@@ -144,7 +141,7 @@ async function deployLockBox(xERC20Address, baseTokenAddress) {
   let lockboxAddress = await factory.getDeploymentCreate3Address(LOCKBOXSALT);
   console.log("Expected Address: " + lockboxAddress);
 
-  const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, false);
+  const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, isNative);
   const proxy = ProxyFactory.attach(lockboxAddress);
   tx = await proxy.initialize(lockboxImpAddr, proxyAdminAddress, calldata);
   await tx.wait();

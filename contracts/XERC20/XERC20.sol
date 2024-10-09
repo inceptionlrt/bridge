@@ -2,12 +2,14 @@
 pragma solidity ^0.8.20;
 
 import {ERC20Upgradeable} from "openzeppelin-4-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "openzeppelin-4-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
-import "openzeppelin-4-upgradeable/access/OwnableUpgradeable.sol";
-import "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
+import {ERC20PermitUpgradeable} from "openzeppelin-4-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import {OwnableUpgradeable} from "openzeppelin-4-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
 import "../interfaces/IXERC20.sol";
 
+/// @author The InceptionLRT team
+/// @title The InceptionBridge contract
 contract XERC20 is
     Initializable,
     ERC20Upgradeable,
