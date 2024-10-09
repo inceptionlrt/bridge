@@ -116,13 +116,13 @@ module.exports = {
       gas: 8000000,
     },
     base: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_FACTORY}`],
       url: `${process.env.RPC_URL_BASE}`,
       chainId: 8453,
       gas: 8000000,
     },
     base_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET_FACTORY}`],
       url: `${process.env.RPC_URL_BASE_TESTNET}`,
       chainId: 84532,
       gas: 8000000,
