@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Initializable} from "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
 import "../interfaces/IXERC20Lockbox.sol";
 import "../interfaces/IXERC20.sol";
 
+/// @author The InceptionLRT team
+/// @title The InceptionBridge contract
 contract XERC20Lockbox is IXERC20Lockbox, Initializable {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
@@ -26,11 +28,6 @@ contract XERC20Lockbox is IXERC20Lockbox, Initializable {
      * @notice Whether the ERC20 token is the native gas token of this chain
      */
     bool public IS_NATIVE;
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() payable {
-        _disableInitializers();
-    }
 
     /**
      * @param _xerc20 The address of the XERC20 contract
