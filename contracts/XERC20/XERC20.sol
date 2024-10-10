@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../interfaces/IXERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20Upgradeable} from "openzeppelin-4-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {ERC20PermitUpgradeable} from "openzeppelin-4-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
+import {OwnableUpgradeable} from "openzeppelin-4-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
-contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
+import {IXERC20} from "../interfaces/IXERC20.sol";
+
+/// @author The InceptionLRT team
+/// @title The InceptionBridge contract
+contract XERC20 is
+    Initializable,
+    ERC20Upgradeable,
+    OwnableUpgradeable,
+    ERC20PermitUpgradeable,
+    IXERC20
+{
     /**
      * @notice The duration it takes for the limits to fully replenish
      */
@@ -15,7 +25,7 @@ contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
     /**
      * @notice The address of the factory which deployed this contract
      */
-    address public immutable FACTORY;
+    address public FACTORY;
 
     /**
      * @notice The address of the lockbox contract
@@ -27,17 +37,25 @@ contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
      */
     mapping(address => Bridge) public bridges;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() payable {
+        _disableInitializers();
+    }
+    
     /**
      * @param _name The name of the token
      * @param _symbol The symbol of the token
      * @param _factory The factory which deployed this contract
      */
-    constructor(
+    function initialize(
         string memory _name,
         string memory _symbol,
         address _factory
-    ) ERC20(_name, _symbol) ERC20Permit(_name) {
-        _transferOwnership(_factory);
+    ) external initializer {
+        __ERC20_init(_name, _symbol);
+        __Ownable_init();
+        __ERC20Permit_init(_name);
+
         FACTORY = _factory;
     }
 
@@ -65,8 +83,7 @@ contract XERC20 is ERC20, Ownable, IXERC20, ERC20Permit {
      * @notice Sets the lockbox address
      * @param _lockbox The address of the lockbox
      */
-    function setLockbox(address _lockbox) external {
-        if (msg.sender != FACTORY) revert IXERC20_NotFactory();
+    function setLockbox(address _lockbox) external onlyOwner {
         lockbox = _lockbox;
 
         emit LockboxSet(_lockbox);
