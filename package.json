@@ -16,7 +16,7 @@
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.3",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
-    "openzeppelin-4-upgradeable": "npm:@openzeppelin/contracts-upgradeable@4.5.0",
+    "openzeppelin-4-upgradeable": "npm:@openzeppelin/contracts-upgradeable@4.8.3",
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "@openzeppelin/hardhat-upgrades": "^3.0.0",

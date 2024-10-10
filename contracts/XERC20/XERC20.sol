@@ -39,7 +39,7 @@ contract XERC20 is
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() payable {
-        //_do();
+        _disableInitializers();
     }
     
     /**

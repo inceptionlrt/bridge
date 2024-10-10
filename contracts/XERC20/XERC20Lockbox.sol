@@ -32,7 +32,7 @@ contract XERC20Lockbox is IXERC20Lockbox, Initializable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() payable {
-        //_do();
+        _disableInitializers();
     }
     
     /**
