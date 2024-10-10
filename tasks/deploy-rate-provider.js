@@ -30,7 +30,7 @@ task("deploy-rate-provider", "Deploys a new RateProvider for an asset")
 
 const deployRateProvider = async (factoryNameStr, ratioFeedAddress, assetAddress) => {
   const RateProviderFactory = await hre.ethers.getContractFactory(factoryNameStr);
-  const rateProvider = await RateProviderFactory.deploy(ratioFeedAddress, assetAddress, { maxFeePerGas: "4226077545" });
+  const rateProvider = await RateProviderFactory.deploy(ratioFeedAddress, assetAddress, { maxFeePerGas: "36216548370" });
   await rateProvider.waitForDeployment();
 
   const rateProviderAddress = (await rateProvider.getAddress()).toString();
@@ -49,6 +49,14 @@ const getRateProviderFactory = async (asset) => {
       return "InETHRateProvider";
     case "insteth":
       return "InstETHRateProvider";
+    case "ineigen":
+      return "InEIGENRateProvider";
+    case "insfrax":
+      return "InsFRAXRateProvider";
+    case "inslisbnb":
+      return "InslisBNBRateProvider";
+    case "intbtc":
+      return "IntBTCBNBRateProvider";
     default:
       return "";
   }
