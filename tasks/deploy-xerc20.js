@@ -122,9 +122,6 @@ async function deployLockBox(xERC20Address, baseTokenAddress) {
   const lockboxImpAddr = await deployLockboxImp();
   const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
 
-  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  // await proxyAdmin.waitForDeployment();
-  // const proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
