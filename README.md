@@ -56,6 +56,15 @@ The bridges have the same address across all supported chains. The address is `0
 | Ethereum   | 1       | `0xDA9B11Cd701e10C2Ec1a284f80820eDD128c5246` | _True_       |
 | BSC        | 56      | `0x3059a337b134Cc89851c8DE18A00D880fa1D5519` | _False_      |
 
+---
+
+`IncbETH`
+
+| Chain Name | ChainId | Address                                      | Source Chain |
+| ---------- | ------- | -------------------------------------------- | ------------ |
+| Ethereum   | 1       | `0xBf19Eead55a6B100667f04F8FBC5371E03E8ab2E` | _True_       |
+| Base       | 8453    | `0xb655932EE66A3C609D57cC24309a0e2c594C944e` | _False_      |
+
 #### Rate Providers
 
 | Asset   | Chain Name | ChainId | Address                                      |
