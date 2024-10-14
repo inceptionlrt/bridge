@@ -25,22 +25,10 @@ module.exports = {
       chainId: 1,
       gas: 8000000,
     },
-    holesky: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_HOLESKY}`,
-      chainId: 17000,
-      gas: 8000000,
-    },
     arbitrum: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       url: `${process.env.RPC_URL_ARBITRUM}`,
       chainId: 42161,
-      gas: 8000000,
-    },
-    arbitrum_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_ARBITRUM_TESTNET}`,
-      chainId: 421614,
       gas: 8000000,
     },
     mode: {
@@ -49,22 +37,10 @@ module.exports = {
       chainId: 34443,
       gas: 8000000,
     },
-    mode_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_MODE_TESTNET}`,
-      chainId: 919,
-      gas: 8000000,
-    },
     xlayer: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       url: `${process.env.RPC_URL_XLAYER}`,
       chainId: 196,
-      gas: 8000000,
-    },
-    xlayer_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_XLAYER_TESTNET}`,
-      chainId: 195,
       gas: 8000000,
     },
     linea: {
@@ -73,22 +49,10 @@ module.exports = {
       chainId: 59144,
       gas: 8000000,
     },
-    linea_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_LINEA_TESTNET}`,
-      chainId: 59141,
-      gas: 8000000,
-    },
     blast: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       url: `${process.env.RPC_URL_BLAST}`,
       chainId: 81457,
-      gas: 8000000,
-    },
-    blast_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_BLAST_TESTNET}`,
-      chainId: 168587773,
       gas: 8000000,
     },
     bsc: {
@@ -97,22 +61,10 @@ module.exports = {
       chainId: 56,
       gas: 8000000,
     },
-    bsc_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_BSC_TESTNET}`,
-      chainId: 97,
-      gas: 8000000,
-    },
     optimism: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       url: `${process.env.RPC_URL_OPTIMISM}`,
       chainId: 10,
-      gas: 8000000,
-    },
-    optimism_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`],
-      url: `${process.env.RPC_URL_OPTIMISM_TESTNET}`,
-      chainId: 11155420,
       gas: 8000000,
     },
     base: {
