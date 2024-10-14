@@ -121,22 +121,10 @@ module.exports = {
       chainId: 8453,
       gas: 8000000,
     },
-    base_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET_FACTORY}`],
-      url: `${process.env.RPC_URL_BASE_TESTNET}`,
-      chainId: 84532,
-      gas: 8000000,
-    },
     fraxtal: {
       accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_FACTORY}`],
       url: `${process.env.RPC_URL_FRAXTAL}`,
       chainId: 252,
-      gas: 8000000,
-    },
-    fraxtal_testnet: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_TESTNET_FACTORY}`],
-      url: `${process.env.RPC_URL_FRAXTAL_TESTNET}`,
-      chainId: 2522,
       gas: 8000000,
     },
   },
