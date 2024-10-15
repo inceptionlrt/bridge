@@ -5,38 +5,6 @@
       {
         "destinationChainID": "1",
         "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "59144",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "34443",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "81457",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "56",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "42161",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "10",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "196",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
-      },
-      {
-        "destinationChainID": "8453",
-        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
       }
     ],
     "tokens": [
