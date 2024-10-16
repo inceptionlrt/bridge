@@ -10,6 +10,7 @@ require("@openzeppelin/hardhat-upgrades");
 
 require("./tasks/setup-bridge");
 require("./tasks/deploy-xerc20");
+require("./tasks/deploy-xerc20-i");
 require("./tasks/deploy-rate-provider");
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -68,13 +69,13 @@ module.exports = {
       gas: 8000000,
     },
     base: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_FACTORY}`],
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       url: `${process.env.RPC_URL_BASE}`,
       chainId: 8453,
       gas: 8000000,
     },
     fraxtal: {
-      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_FACTORY}`],
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
       url: `${process.env.RPC_URL_FRAXTAL}`,
       chainId: 252,
       gas: 8000000,
