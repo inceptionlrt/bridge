@@ -2,7 +2,7 @@ const abiCoder = require("web3-eth-abi");
 const XERC_TEMPLATE_PATH = "./tasks/templates/xerc20.json";
 
 let factoryAddress, deployer;
-let proxyAdminAddress;
+let proxyAdminAddress = "0xCdD6b2e8E43c4281F99c44A316bACC3348A873A4";
 
 task("deploy-xerc20", "it deploys the set of XERC20 contracts")
   .addParam("execute", "whether deploy contracts or not (1 / 0)")
@@ -38,7 +38,7 @@ task("deploy-xerc20", "it deploys the set of XERC20 contracts")
   });
 
 const deploy = async (deployCallData) => {
-  const xERC20Address = await deployXERC20(deployCallData);
+  const xERC20Address = "0x157743261C3ba961e92421b268A881AeCe450d41";
   console.log("xERC20 Address  : " + xERC20Address);
 
   if (deployCallData.homeChain) {
@@ -54,77 +54,18 @@ const deploy = async (deployCallData) => {
   return xERC20Address;
 };
 
-async function xERC20Calldata(name, symbol) {
-  const methodId = abiCoder.encodeFunctionSignature("initialize(string,string,address)");
-  const params = abiCoder.encodeParameters(["string", "string", "address"], [name, symbol, factoryAddress]);
-  return methodId + params.substr(2);
-}
-
 async function lockboxCalldata(xerc20, base, native) {
   const methodId = abiCoder.encodeFunctionSignature("initialize(address,address,bool)");
   const params = abiCoder.encodeParameters(["address", "address", "bool"], [xerc20, base, native]);
   return methodId + params.substr(2);
 }
 
-async function deployXERC20Imp() {
-  const xERC20ImplFactory = await ethers.deployContract("XERC20");
-  await xERC20ImplFactory.waitForDeployment();
-
-  const xERC20ImplAddress = await xERC20ImplFactory.getAddress();
-  console.log(`XERC20 Impl address: ${xERC20ImplAddress}`);
-
-  return xERC20ImplAddress;
-}
-
-async function deployLockboxImp() {
-  const lockboxImplFactory = await ethers.deployContract("XERC20Lockbox");
-  await lockboxImplFactory.waitForDeployment();
-
-  const lockboxImplAddress = await lockboxImplFactory.getAddress();
-  console.log(`Lockbox Impl address: ${lockboxImplAddress}`);
-
-  return lockboxImplAddress;
-}
-
-async function deployXERC20(xERC20Config) {
-  console.log("... Deploying xERC20 token ...");
-
-  const xERC20ImpAddr = await deployXERC20Imp();
-  const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
-
-  const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  await proxyAdmin.waitForDeployment();
-  proxyAdminAddress = await proxyAdmin.getAddress();
-  console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
-
-  const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
-  
-  let XERC20SALT = ethers.solidityPackedKeccak256(["string", "string", "address"], [xERC20Config.tokenName, xERC20Config.tokenSymbol, await deployer.getAddress()]);
-  let BYTECODE = ethers.solidityPacked(["bytes"], [ProxyFactory.bytecode]);
-
-  let tx = await factory.deployCreate3(BYTECODE, XERC20SALT);
-  const receipt = await tx.wait();
-  let event = receipt.logs.find((e) => e.eventName === "ContractCreated");
-
-  console.log("Expected Address: " + event.args.addr);
-
-  const calldata = await xERC20Calldata(xERC20Config.tokenName, xERC20Config.tokenSymbol)
-  const proxy = ProxyFactory.attach(event.args.addr);
-  tx = await proxy.initialize(xERC20ImpAddr, proxyAdminAddress, calldata);
-  await tx.wait();
-
-  return event.args.addr;
-}
-
 async function deployLockBox(xERC20Address, baseTokenAddress) {
   console.log("... Deploying Lockbox ...");
 
-  const lockboxImpAddr = await deployLockboxImp();
+  const lockboxImpAddr = "0x4C858892DEcbF31460603f4bFC4620C328047f37";
   const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
 
-  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  // await proxyAdmin.waitForDeployment();
-  // const proxyAdminAddress = await proxyAdmin.getAddress();
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
@@ -133,18 +74,18 @@ async function deployLockBox(xERC20Address, baseTokenAddress) {
   let BYTECODE = ethers.solidityPacked(["bytes"], [ProxyFactory.bytecode]);
 
   let isNative = false;
-  let tx = await factory.deployCreate3(BYTECODE, LOCKBOXSALT);
-  const receipt = await tx.wait();
-  const event = receipt.logs.find((e) => e.eventName === "ContractCreated");
+  // let tx = await factory.deployCreate3(BYTECODE, LOCKBOXSALT);
+  // const receipt = await tx.wait();
+  // const event = receipt.logs.find((e) => e.eventName === "ContractCreated");
 
-  console.log("Expected Address: " + event.args.addr);
+  console.log("Expected Address: " + "0xA6e46BE78064561d212ec61eB744D97c8FC0ac65");
 
   const calldata = await lockboxCalldata(xERC20Address, baseTokenAddress, isNative);
-  const proxy = ProxyFactory.attach(event.args.addr);
+  const proxy = ProxyFactory.attach("0xA6e46BE78064561d212ec61eB744D97c8FC0ac65");
   tx = await proxy.initialize(lockboxImpAddr, proxyAdminAddress, calldata);
   await tx.wait();
 
-  return event.args.addr;
+  return "0xA6e46BE78064561d212ec61eB744D97c8FC0ac65";
 }
 
 async function setAllowances(xerc20Address, bridgeAddress, config) {
