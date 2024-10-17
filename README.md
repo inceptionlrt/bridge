@@ -65,6 +65,24 @@ The bridges have the same address across all supported chains. The address is `0
 | Ethereum   | 1       | `0xBf19Eead55a6B100667f04F8FBC5371E03E8ab2E` | _True_       |
 | Base       | 8453    | `0xb655932EE66A3C609D57cC24309a0e2c594C944e` | _False_      |
 
+---
+
+`InsfrxETH`
+
+| Chain Name | ChainId | Address                                      | Source Chain |
+| ---------- | ------- | -------------------------------------------- | ------------ |
+| Ethereum   | 1       | `0x668308d77be3533c909a692302Cb4D135Bf8041C` | _True_       |
+| Fraxtal    | 252     | `0xE162075a1C0Ac7e985253972bEcA5e83Da3BBaa4` | _False_      |
+
+---
+
+`insFRAX`
+
+| Chain Name | ChainId | Address                                      | Source Chain |
+| ---------- | ------- | -------------------------------------------- | ------------ |
+| Ethereum   | 1       | `0x50253dc4a01c6408Fab9646e804FCbFDb74e3E4c` | _True_       |
+| Fraxtal    | 252     | `0x157743261C3ba961e92421b268A881AeCe450d41` | _False_      |
+
 #### Rate Providers
 
 | Asset   | Chain Name | ChainId | Address                                      |
