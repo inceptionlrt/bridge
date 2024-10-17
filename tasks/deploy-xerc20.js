@@ -89,12 +89,14 @@ async function deployLockboxImp() {
 async function deployXERC20(xERC20Config) {
   console.log("... Deploying xERC20 token ...");
 
-  const xERC20ImpAddr = await deployXERC20Imp();
+  // const xERC20ImpAddr = await deployXERC20Imp();
+  const xERC20ImpAddr = "0xBf47307F7Bd75a8db3c8f69F913e9B77fc222e84";
   const factory = await hre.ethers.getContractAt("BridgeFactory", factoryAddress);
 
-  const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  await proxyAdmin.waitForDeployment();
-  proxyAdminAddress = await proxyAdmin.getAddress();
+  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
+  // await proxyAdmin.waitForDeployment();
+  // proxyAdminAddress = await proxyAdmin.getAddress();
+  proxyAdminAddress = "0xB2F44773e99cfFeCb00AE9ba62913EA14C3B6163";
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   const ProxyFactory = await ethers.getContractFactory("InitializableTransparentUpgradeableProxy");
@@ -102,18 +104,18 @@ async function deployXERC20(xERC20Config) {
   let XERC20SALT = ethers.solidityPackedKeccak256(["string", "string", "address"], [xERC20Config.tokenName, xERC20Config.tokenSymbol, await deployer.getAddress()]);
   let BYTECODE = ethers.solidityPacked(["bytes"], [ProxyFactory.bytecode]);
 
-  let tx = await factory.deployCreate3(BYTECODE, XERC20SALT);
-  const receipt = await tx.wait();
-  let event = receipt.logs.find((e) => e.eventName === "ContractCreated");
+  // let tx = await factory.deployCreate3(BYTECODE, XERC20SALT);
+  // const receipt = await tx.wait();
+  // let event = receipt.logs.find((e) => e.eventName === "ContractCreated");
 
-  console.log("Expected Address: " + event.args.addr);
+  // console.log("Expected Address: " + event.args.addr);
 
   const calldata = await xERC20Calldata(xERC20Config.tokenName, xERC20Config.tokenSymbol)
-  const proxy = ProxyFactory.attach(event.args.addr);
+  const proxy = ProxyFactory.attach("0xB2B446386633C6746B0a2735FB57edBb066c5878");
   tx = await proxy.initialize(xERC20ImpAddr, proxyAdminAddress, calldata);
   await tx.wait();
 
-  return event.args.addr;
+  return "0xB2B446386633C6746B0a2735FB57edBb066c5878";
 }
 
 async function deployLockBox(xERC20Address, baseTokenAddress) {
