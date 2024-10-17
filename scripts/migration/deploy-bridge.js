@@ -58,6 +58,11 @@ async function deployBridge(implementationAddress, factoryAddress, notaryAddress
   const proxyAddress = (await factory.getDeploymentCreate2Address(proxyBytecode, await deployer.getAddress())).toString();
   console.log(`Bridge Proxy address: ${proxyAddress}`);
 
+  if (proxyAddress.toString() != "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac") {
+    console.error("WRONG BRIDGE ADDRESS");
+    return;
+  }
+
   tx = await factory.deployCreate2(proxyBytecode);
   await tx.wait();
 
