@@ -1,37 +1,50 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Initializable} from "openzeppelin-4-upgradeable/proxy/utils/Initializable.sol";
 
-import "../interfaces/IXERC20Lockbox.sol";
-import "../interfaces/IXERC20.sol";
+import {IXERC20Lockbox} from "../interfaces/IXERC20Lockbox.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IXERC20} from "../interfaces/IXERC20.sol";
 
-contract XERC20Lockbox is IXERC20Lockbox {
+/// @author The InceptionLRT team
+/// @title The InceptionBridge contract
+contract XERC20Lockbox is IXERC20Lockbox, Initializable {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
 
     /**
      * @notice The XERC20 token of this contract
      */
-    IXERC20 public immutable XERC20;
+    IXERC20 public XERC20;
 
     /**
      * @notice The ERC20 token of this contract
      */
-    IERC20 public immutable ERC20;
+    IERC20 public ERC20;
 
     /**
      * @notice Whether the ERC20 token is the native gas token of this chain
      */
-    bool public immutable IS_NATIVE;
+    bool public IS_NATIVE;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() payable {
+        _disableInitializers();
+    }
+    
     /**
      * @param _xerc20 The address of the XERC20 contract
      * @param _erc20 The address of the ERC20 contract
      * @param _isNative Whether the ERC20 token is the native gas token of this chain or not
      */
-    constructor(address _xerc20, address _erc20, bool _isNative) payable {
+    function initialize(
+        address _xerc20,
+        address _erc20,
+        bool _isNative
+    ) external initializer {
         XERC20 = IXERC20(_xerc20);
         ERC20 = IERC20(_erc20);
         IS_NATIVE = _isNative;
