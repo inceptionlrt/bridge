@@ -127,6 +127,12 @@ module.exports = {
       chainId: 84532,
       gas: 8000000,
     },
+    fraxtal: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`],
+      url: `${process.env.RPC_URL_FRAXTAL}`,
+      chainId: 252,
+      gas: 8000000,
+    },
   },
   solidity: {
     compilers: [
