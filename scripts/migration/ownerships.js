@@ -51,6 +51,21 @@ const deployFactory = async () => {
 
     // TX = await paXC.transferOwnership(ethereumMultisig); await TX.wait(); console.log("1");
     TX = await prXc.transferOwnership(ethereumMultisig); await TX.wait(); console.log("2");
+  } else if (hre.network.name = "mode") {
+    let modeMultisig = "0x7411242477Ee9CfA06141398224586E65099f035";
+
+    let bridge = await ethers.getContractAt("InceptionBridge", "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac");
+    let TX;
+
+    TX = await bridge.setShortCap("0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d", "800000000000000000000"); await TX.wait(); console.log("1");
+    TX = await bridge.setLongCap("0x5A7a183B6B44Dc4EC2E3d2eF43F98C5152b1d76d", "4000000000000000000000"); await TX.wait(); console.log("2");
+
+    TX = await bridge.setShortCap("0x5A32d48411387577c26a15775cf939494dA8064A", "800000000000000000000"); await TX.wait(); console.log("3");
+    TX = await bridge.setLongCap("0x5A32d48411387577c26a15775cf939494dA8064A", "4000000000000000000000"); await TX.wait(); console.log("4");
+
+    TX = await bridge.transferOwnership(modeMultisig); await TX.wait(); console.log("5");
+
+
   } else throw ("Incorrect Network");
 };
 
