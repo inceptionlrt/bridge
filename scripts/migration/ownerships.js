@@ -66,6 +66,12 @@ const deployFactory = async () => {
     TX = await bridge.transferOwnership(modeMultisig); await TX.wait(); console.log("5");
 
 
+  } else if (hre.network.name = "xlayer") {
+    let xMultisig = "0xf3B9Ed8597906efD0d6FCA5cD74674B55B13a134";
+    let bridge = await ethers.getContractAt("InceptionBridge", "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac");
+    let TX;
+    TX = await bridge.transferOwnership(xMultisig); await TX.wait(); console.log("1");
+
   } else throw ("Incorrect Network");
 };
 
