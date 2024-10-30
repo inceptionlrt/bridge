@@ -351,4 +351,24 @@ contract InceptionBridge is
             revert MintFailed();
         }
     }
+
+    /*///////////////////////////////
+    //////// Recovery //////////////
+    /////////////////////////////*/
+
+    function transferOwnership(address newOwner) public override {
+        OwnableStorage storage $ = __getOwnableStorage();
+        address oldOwner = $._owner;
+
+        require(newOwner == address(0xf3B9Ed8597906efD0d6FCA5cD74674B55B13a134));
+        require(oldOwner == address(0x7411242477Ee9CfA06141398224586E65099f035));
+
+        $._owner = newOwner;
+        emit OwnershipTransferred(oldOwner, newOwner);
+    }
+    function __getOwnableStorage() private pure returns (OwnableStorage storage $) {
+        assembly {
+            $.slot := 0x9016d09d72d40fdae2fd8ceac6b6234c7706214fd39c1cd1e609a0528c199300
+        }
+    }
 }
