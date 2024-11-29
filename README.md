@@ -135,7 +135,6 @@ The bridges have the same address across all supported chains. The address is `0
 | Chain Name | ChainId   | Address                                      | Source Chain |
 | ---------- | --------- | -------------------------------------------- | ------------ |
 | Holesky    | 17000     | `0x76944d54c9eF0a7A563E43226e998F382714C92f` | _True_       |
-| Arbitrum   | 421614    | `0xb1692ed9b08f8dd641f4109568ed6f471166c7e5` | _False_      |
 | Optimism   | 11155420  | `0xb1692ed9b08f8dd641f4109568ed6f471166c7e5` | _False_      |
 | BSC        | 97        | `0xb1692ed9b08f8dd641f4109568ed6f471166c7e5` | _False_      |
 | Blast      | 168587773 | `0xb1692ed9b08f8dd641f4109568ed6f471166c7e5` | _False_      |
@@ -149,10 +148,11 @@ The bridges have the same address across all supported chains. The address is `0
 
 #### RatioFeeds
 
-| Chain Name | ChainId | Address                                      |
-| ---------- | ------- | -------------------------------------------- |
-| BSC        | 97      | `0x05aAC4a15972C333A3832298609b61A8adcD0623` |
-| Linea      | 59141   | `0xFea428946A2c602C09c0F737Ea65BC16298b0415` |
+| Chain Name | ChainId  | Address                                      |
+| ---------- | -------- | -------------------------------------------- |
+| BSC        | 97       | `0x05aAC4a15972C333A3832298609b61A8adcD0623` |
+| Linea      | 59141    | `0xFea428946A2c602C09c0F737Ea65BC16298b0415` |
+| Optimism   | 11155420 | `0x6f5e108C7bf192094972A98e7CC3739a6e056176` |
 
 ## Deployment Flow
 
