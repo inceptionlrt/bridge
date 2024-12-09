@@ -127,6 +127,18 @@ module.exports = {
       chainId: 84532,
       gas: 8000000,
     },
+    zircuit: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_FACTORY}`],
+      url: `${process.env.RPC_URL_ZIRCUIT}`,
+      chainId: 48900,
+      gas: 8000000,
+    },
+    zircuit_testnet: {
+      accounts: [`0x${process.env.DEPLOYER_PRIVATE_KEY}`, `0x${process.env.DEPLOYER_PRIVATE_KEY_FACTORY}`],
+      url: `${process.env.RPC_URL_ZIRCUIT_TESTNET}`,
+      chainId: 48899,
+      gas: 8000000,
+    },
   },
   solidity: {
     compilers: [
