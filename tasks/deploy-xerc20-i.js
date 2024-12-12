@@ -43,11 +43,11 @@ task("deploy-xerc20-i", "it deploys the set of XERC20 contracts")
   });
 
 const deploy = async (deployCallData) => {
-  const xERC20Address = await deployXERC20(deployCallData);
+  const xERC20Address = "0x9eFdE41A87fa4dD47BAa584954e8Abd5b8bdBfE7";
   console.log("xERC20 Address  : " + xERC20Address);
 
   if (deployCallData.homeChain) {
-    const lockBoxAddress = await deployLockBox(xERC20Address, deployCallData.tokenAddress);
+    const lockBoxAddress = "0xE075B9B12e41f8A0001FEEdA1C03E89418CA0cc0";
     console.log("Lockbox Address : " + lockBoxAddress);
 
     let xerc20 = await ethers.getContractAt("XERC20", xERC20Address);
