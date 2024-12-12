@@ -10,6 +10,7 @@ require("@openzeppelin/hardhat-upgrades");
 
 require("./tasks/setup-bridge");
 require("./tasks/deploy-xerc20");
+require("./tasks/deploy-xerc20-i");
 require("./tasks/deploy-rate-provider");
 
 /** @type import('hardhat/config').HardhatUserConfig */
