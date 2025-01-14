@@ -47,9 +47,9 @@ async function deployBridge(implementationAddress, factoryAddress, notaryAddress
   const factory = await ethers.getContractAt("BridgeFactory", factoryAddress);
 
   /// Deploy ProxyAdmin
-  const proxyAdmin = await ethers.deployContract("ProxyAdmin");
-  await proxyAdmin.waitForDeployment();
-  const proxyAdminAddress = await proxyAdmin.getAddress();
+  // const proxyAdmin = await ethers.deployContract("ProxyAdmin");
+  // await proxyAdmin.waitForDeployment();
+  const proxyAdminAddress = "0xB81e55e7Ee6B286aF6abFEa4eFad83f7BA4D1f1e";
   console.log(`ProxyAdmin address: ${proxyAdminAddress}`);
 
   /// Deploy TransparentUpgradeableProxy
@@ -91,7 +91,7 @@ async function main() {
     console.error("factory address is null");
   }
 
-  const bridgeImplAddress = await deployBridgeImpl();
+  const bridgeImplAddress = "0xB2F44773e99cfFeCb00AE9ba62913EA14C3B6163";
   const bridgeProxyAddress = await deployBridge(bridgeImplAddress, factoryAddress, notaryAddress);
 
   // Save the Bridge Impl address

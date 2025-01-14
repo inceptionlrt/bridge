@@ -10,7 +10,7 @@ const deployFactory = async () => {
   console.log("###################### Factory deployment #######################");
   console.log("##################################################################\n");
 
-  const [deployer] = await ethers.getSigners();
+  const [normalDeployer, deployer] = await ethers.getSigners();
   await printBalance(deployer);
 
   if ((await deployer.getNonce()).toString() != DEPLOYER_NONCE) {
@@ -22,7 +22,8 @@ const deployFactory = async () => {
     return;
   }
 
-  const factory = await ethers.deployContract("BridgeFactory");
+  const Factory = await ethers.getContractFactory("BridgeFactory");
+  const factory = await Factory.connect(deployer).deploy();
   await factory.waitForDeployment();
 
   const factoryAddress = await factory.getAddress();
@@ -47,4 +48,3 @@ main()
     console.error(error);
     process.exit(1);
   });
-  

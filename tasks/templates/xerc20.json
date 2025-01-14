@@ -1,6 +1,6 @@
 {
-  "tokenName": "Inception Restaked cbETH",
-  "tokenSymbol": "IncbETH",
+  "tokenName": "Inception Symbiotic Restaked wstETH",
+  "tokenSymbol": "inwstETHs",
   "mintingAllowances": "1000000000000000000000",
   "burningAllowances": "1000000000000000000000"
 }
