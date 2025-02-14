@@ -114,6 +114,7 @@ The bridges have the same address across all supported chains. The address is `0
 | Linea      | 59144   | `0x048a2F5CD64B89f750cf14a5F36922Ae7b07221c` |
 | Ethereum   | 1       | `0xFd73Be536503B5Aa80Bf99D1Fd65b1306c69B191` |
 | X Layer    | 196     | `0x36B429439AB227fAB170A4dFb3321741c8815e55` |
+| Fraxtal    | 252     | `0x19Ba5CcC603e1224B8502C56087e4147cEDD2522` |
 
 ### Testnet
 
