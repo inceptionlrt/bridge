@@ -59,6 +59,8 @@ const getRateProviderFactory = async (asset) => {
       return "IntBTCBNBRateProvider";
     case "inwsteths":
       return "InwstETHsRateProvider";
+    case "inlseths":
+      return "InLsETHsRateProvider";
     default:
       return "";
   }
