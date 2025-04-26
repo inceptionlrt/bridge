@@ -208,5 +208,23 @@
         "longCap": "120000000000000000000"
       }
     ]
+  },
+  "48900": {
+    "bridgeAddress": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac",
+    "bridgesToAdd": [
+      {
+        "destinationChainID": "1",
+        "address": "0xC00cD5599F7E128FC5Ed5563147a45B12e83B3ac"
+      }
+    ],
+    "tokens": [
+      {
+        "fromToken": "0x9eFdE41A87fa4dD47BAa584954e8Abd5b8bdBfE7",
+        "destinationChainID": "1",
+        "destinationAddress": "0x8E0789d39db454DBE9f4a77aCEF6dc7c69f6D552",
+        "shortCap": "50000000000000000000",
+        "longCap": "120000000000000000000"
+      }
+    ]
   }
 }

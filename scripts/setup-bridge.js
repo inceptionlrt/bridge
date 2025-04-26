@@ -21,8 +21,8 @@ async function setupBridge(bridgeConfig) {
   if (bridgesToAdd !== undefined) {
     for (let i = 0; i < bridgesToAdd.length; i++) {
       try {
-        tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
-        await tx.wait();
+        // tx = await bridge.addBridge(bridgesToAdd[i].address, bridgesToAdd[i].destinationChainID);
+        // await tx.wait();
         console.log(`new bridge address: ${bridgesToAdd[i].address}; chainID: ${bridgesToAdd[i].destinationChainID} was added\n`);
       } catch (e) {
         console.warn(`the bridge ${bridgesToAdd[i].address} to ${bridgesToAdd[i].destinationChainID} was skipped`);
@@ -43,8 +43,8 @@ async function setupBridge(bridgeConfig) {
 
       const destination = (await bridge.getDestination(originalTokenAddress, tokenToAdd[i].destinationChainID)).toString();
       if (destination == "0x0000000000000000000000000000000000000000") {
-        tx = await bridge.addDestination(originalTokenAddress, tokenToAdd[i].destinationChainID, tokenToAdd[i].destinationAddress);
-        await tx.wait();
+        // tx = await bridge.addDestination(originalTokenAddress, tokenToAdd[i].destinationChainID, tokenToAdd[i].destinationAddress);
+        // await tx.wait();
       }
 
       const currentShortCap = (await bridge.shortCaps(originalTokenAddress)).toString();
